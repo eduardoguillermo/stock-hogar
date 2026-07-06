@@ -155,7 +155,7 @@
     <h1>📦 Stock en Casa</h1>
     <p>Control de stock del hogar por escaneo de código de barras — Almacén, Limpieza y Lácteos.</p>
     <div class="hero-badges">
-      <span class="badge badge-teal">v0.17.1</span>
+      <span class="badge badge-teal">v0.20.0</span>
       <span class="badge badge-blue">Escáner + Gestión</span>
       <span class="badge badge-green">Sincronizado con Drive</span>
     </div>
@@ -231,6 +231,8 @@
     <p>Podés dar de alta un producto directamente acá (sin pasar por el celular) completando el formulario de arriba.</p>
     <p>La tabla es <strong>editable en línea</strong>: tocás cualquier campo (nombre, rubro, guarda, mínimo, notas) y se guarda solo al cambiarlo, sin botón de "guardar" aparte.</p>
     <div class="warning">Borrar un producto (🗑️) también borra sus lotes y su historial de vencimientos asociado. Pide confirmación antes de aplicarlo.</div>
+    <h2>Reponer o consumir manualmente (sin celular)</h2>
+    <p>Cada fila tiene dos botones extra: <strong>➕</strong> despliega un formulario chico (cantidad, proveedor, precio, vencimiento) para reponer directo desde la PC, y <strong>➖</strong> consume 1 unidad del lote más próximo a vencer, con confirmación previa. Útil cuando no tenés a mano el celular para escanear.</p>
   </div>
 
   <div class="section" id="vencimientos">
@@ -273,6 +275,7 @@
       <div><div class="section-title">Lista de compra</div><div class="section-subtitle">Se arma sola según los mínimos</div></div>
     </div>
     <p>Cualquier producto con stock por debajo de su mínimo configurado aparece acá automáticamente. El botón <strong>📤 Compartir</strong> usa el selector nativo del sistema — elegís vos si la mandás a Keep, WhatsApp, Notas o donde uses habitualmente.</p>
+    <div class="note">En Windows, el panel de "Compartir" solo lista apps registradas como destino (suele mostrar cosas de Microsoft, no Gmail/Keep de Google). Para esos casos, usá <strong>📋 Copiar</strong> al lado — copia el texto al portapapeles para pegarlo donde quieras.</div>
   </div>
 
   <div class="section" id="drive">
@@ -300,18 +303,46 @@
       <div class="dash-card" style="color:var(--green);"><h4>Drive</h4><div class="value">Automático</div><p style="font-size:12px; color:var(--muted); margin-top:4px;">Si está conectado</p></div>
     </div>
     <h2>Vincular carpeta (PC)</h2>
-    <p>En <code>gestion.html</code> → <strong>📂 Vincular carpeta</strong>. Guarda <code>stock_backup_[fecha].json</code>, rotando un máximo de 7 archivos.</p>
+    <p>Botón <strong>💾 BK</strong> en el sidebar despliega dos opciones: <strong>📂 Vincular carpeta</strong> y <strong>⤴️ Restaurar backup</strong>. Una vez vinculada, la ruta de la carpeta queda a la vista ahí mismo, debajo de "Vincular carpeta". Guarda <code>stock_backup_[fecha].json</code>, rotando un máximo de 7 archivos.</p>
     <div class="warning">Brave bloquea esta función por sitio a través de "Edición de archivos" en <code>brave://settings/content/all</code>. Si el botón no hace nada, revisá ese permiso ahí y ponelo en "Preguntar", después recargá con Ctrl+Shift+R.</div>
     <div class="info">Si tu navegador no soporta esta función (Brave sin el permiso habilitado, Firefox, Safari), el botón descarga un archivo suelto a la carpeta de Descargas en su lugar — sirve igual como respaldo manual.</div>
     <h2>Restaurar un backup</h2>
     <p>Botón <strong>⤴️ Restaurar backup</strong> → elegís cualquier archivo <code>stock_backup...json</code> (de carpeta, de Drive, o descargado a mano). Te muestra cuántos productos y lotes trae antes de confirmar — <strong>reemplaza todo</strong> lo que tenías cargado en ese navegador.</p>
     <div class="tip">Sirve también para pasar los datos entre distintas instalaciones/perfiles de navegador: restaurás en el nuevo el backup que sacaste del viejo.</div>
+    <h2>Botón 🚪 Salir</h2>
+    <p>Al tocarlo: guarda el snapshot local, hace el backup en la carpeta vinculada (si hay una), intenta reconectar Drive automáticamente si te habías conectado antes (silencioso, sin pedirte nada), sube el respaldo ahí también, y te muestra un resumen de las 3 capas antes de cerrar la ventana.</p>
+    <div class="note">El cierre automático de la ventana (<code>window.close()</code>) solo funciona si la app está <strong>instalada como PWA</strong>. En una pestaña normal del navegador, el respaldo se hace igual pero la pestaña no se cierra sola (restricción de seguridad de los navegadores).</div>
   </div>
 
   <div class="section" id="changelog">
     <div class="section-header">
       <span class="section-icon">🧾</span>
-      <div><div class="section-title">Historial de cambios</div><div class="section-subtitle">De v0.1.0 a v0.17.1</div></div>
+      <div><div class="section-title">Historial de cambios</div><div class="section-subtitle">De v0.1.0 a v0.20.0</div></div>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.20.0</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Al salir, la app intenta reconectar Drive automáticamente (silencioso) antes de hacer el backup, para no saltearlo si la conexión se había perdido</li>
+        <li>Botón "📋 Copiar" agregado en Lista de compra, como alternativa a "Compartir" cuando el panel del sistema no lista apps de Google</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.19.0</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Reponer y consumir manualmente desde Productos (➕/➖), sin depender del celular</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.18.0 – v0.18.2</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Instructivo (este documento) agregado y enlazado desde ambas apps</li>
+        <li>Sidebar reordenado: Ayuda alineada con el nav, botón 💾 BK colapsado agrupando carpeta y restaurar, Salir al final antes de la firma</li>
+        <li>Botón de ayuda "?" contextual en cada pantalla, con link directo a la sección correspondiente de este instructivo</li>
+        <li>Fix: el botón Salir en la PC ahora también cierra la ventana (antes solo hacía el respaldo)</li>
+      </ul>
     </div>
 
     <div class="changelog-entry">
