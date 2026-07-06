@@ -5,7 +5,9 @@ const ARCHIVOS = [
   './gestion.html',
   './stock-data.js',
   './manifest-escaner.json',
-  './manifest-gestion.json'
+  './manifest-gestion.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
