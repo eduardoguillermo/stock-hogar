@@ -164,12 +164,20 @@ const StockDB = (() => {
     return true;
   }
 
+  function importarTodo(data) {
+    if (!data || typeof data !== 'object') return false;
+    _set(KEYS.productos, data.productos || {});
+    _set(KEYS.lotes, data.lotes || []);
+    _set(KEYS.cola, data.cola || []);
+    return true;
+  }
+
   return {
     getProducto, listProductos, upsertProducto, eliminarProducto,
     listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
     listCola, encolarEscaneo, marcarProcesado, mezclarColaRemota,
     proximosAVencer, bajoMinimo, listProveedores,
-    exportarTodo, guardarSnapshot, listSnapshots, restaurarSnapshot,
+    exportarTodo, guardarSnapshot, listSnapshots, restaurarSnapshot, importarTodo,
     uid, hoy
   };
 })();
