@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.6.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.7.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -133,7 +133,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.7.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -203,7 +203,7 @@ function renderPendientes(){
         <div class="pend-card rem">
           <div class="top"><b>${nombre}</b><span class="op rem">CONSUMIR</span></div>
           <div class="sub-h" style="margin:8px 0 0;">Se descuenta el lote más próximo a vencer (FEFO). Sin datos adicionales.</div>
-          <div class="save-row"><button onclick="confirmarConsumo('${item.id}','${item.ean}')">Confirmar</button></div>
+          <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="confirmarConsumo('${item.id}','${item.ean}')">Confirmar</button></div>
         </div>`;
     }
 
@@ -220,7 +220,7 @@ function renderPendientes(){
             <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo"></div>
             <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
             <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
-            <div class="save-row"><button onclick="altaYReponer('${item.id}','${item.ean}')">Guardar</button></div>
+            <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="altaYReponer('${item.id}','${item.ean}')">Guardar</button></div>
           </div>
         </div>`;
     }
@@ -233,7 +233,7 @@ function renderPendientes(){
           <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo"></div>
           <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
           <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
-          <div class="save-row"><button onclick="completarReposicion('${item.id}','${item.ean}')">Guardar</button></div>
+          <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="completarReposicion('${item.id}','${item.ean}')">Guardar</button></div>
         </div>
       </div>`;
   }).join('');
@@ -244,6 +244,13 @@ function confirmarConsumo(id, ean){
   if(!lote) alert('No hay stock activo para descontar.');
   StockDB.marcarProcesado(id);
   render();
+}
+
+function descartarPendiente(id){
+  if(confirm('¿Descartar este pendiente? No se va a registrar ningún movimiento de stock.')){
+    StockDB.marcarProcesado(id);
+    render();
+  }
 }
 
 function completarReposicion(id, ean){
