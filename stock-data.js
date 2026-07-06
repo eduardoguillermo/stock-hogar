@@ -57,6 +57,15 @@ const StockDB = (() => {
   }
 
   // Consume 1 unidad del lote más próximo a vencer (FEFO). Devuelve el lote afectado o null si no hay stock.
+  function editarLote(loteId, cambios) {
+    const lotes = listLotes();
+    const lote = lotes.find(l => l.id === loteId);
+    if (!lote) return false;
+    Object.assign(lote, cambios);
+    _set(KEYS.lotes, lotes);
+    return true;
+  }
+
   function consumirUno(ean) {
     const lotes = listLotes();
     const activos = lotes.filter(l => l.ean === ean && l.estado === 'activo' && l.cantidadRestante > 0)
@@ -189,7 +198,7 @@ const StockDB = (() => {
 
   return {
     getProducto, listProductos, upsertProducto, eliminarProducto,
-    listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
+    listLotes, lotesDe, lotesActivos, stockDe, agregarLote, editarLote, consumirUno,
     listCola, encolarEscaneo, marcarProcesado, mezclarColaRemota,
     proximosAVencer, bajoMinimo, listProveedores, listMovimientos,
     exportarTodo, guardarSnapshot, listSnapshots, restaurarSnapshot, importarTodo,
