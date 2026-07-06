@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.8.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.8.1</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -135,7 +135,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.8.0';
+const APP_VERSION = '0.8.1';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -272,7 +272,7 @@ function altaYReponer(id, ean){
   const g = k => document.getElementById(`f_${k}_${id}`).value;
   const nombre = g('nombre').trim();
   if(!nombre){ alert('Falta el nombre del producto — el código de barras no lo trae, hay que escribirlo.'); return; }
-  StockDB.upsertProducto({ ean, nombre, rubro: g('rubro'), guarda: g('guarda'), minimo: Number(g('minimo'))||2 });
+  StockDB.upsertProducto({ ean, nombre, rubro: g('rubro'), guarda: g('guarda'), minimo: (isNaN(Number(g('minimo')))?2:Number(g('minimo'))) });
   StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: g('precio'), vencimiento: g('venc') || null });
   StockDB.marcarProcesado(id);
   render();
@@ -285,7 +285,7 @@ function altaProducto(){
     ean, nombre: document.getElementById('npNombre').value.trim() || ean,
     rubro: document.getElementById('npRubro').value,
     guarda: document.getElementById('npGuarda').value,
-    minimo: Number(document.getElementById('npMinimo').value) || 2
+    minimo: (isNaN(Number(document.getElementById('npMinimo').value))?2:Number(document.getElementById('npMinimo').value))
   });
   ['npEan','npNombre'].forEach(id=>document.getElementById(id).value='');
   render();
@@ -302,7 +302,7 @@ function renderProductos(){
       <td><input class="notes-inline" value="${(p.nombre||'').replace(/"/g,'&quot;')}" onchange="StockDB.upsertProducto({ean:'${p.ean}', nombre:this.value}); render();"></td>
       <td><select class="notes-inline" onchange="StockDB.upsertProducto({ean:'${p.ean}', rubro:this.value}); render();">${opt(rubros, p.rubro)}</select></td>
       <td><select class="notes-inline" onchange="StockDB.upsertProducto({ean:'${p.ean}', guarda:this.value}); render();">${opt(guardas, p.guarda)}</select></td>
-      <td><input class="notes-inline" type="number" style="width:60px;" value="${p.minimo}" onchange="StockDB.upsertProducto({ean:'${p.ean}', minimo:Number(this.value)||2}); render();"></td>
+      <td><input class="notes-inline" type="number" style="width:60px;" value="${p.minimo}" onchange="StockDB.upsertProducto({ean:'${p.ean}', minimo:(isNaN(Number(this.value))?2:Number(this.value))}); render();"></td>
       <td><input class="notes-inline" value="${(p.notas||'').replace(/"/g,'&quot;')}" onchange="StockDB.upsertProducto({ean:'${p.ean}', notas:this.value})"></td>
       <td><button style="background:none; border:none; color:var(--bad); cursor:pointer; font-size:16px;" title="Borrar producto" onclick="borrarProducto('${p.ean}','${(p.nombre||'').replace(/'/g,"\\'")}')">🗑️</button></td>
     </tr>`).join('') || `<tr><td colspan="6" class="sub-h">Sin productos aún.</td></tr>`;
