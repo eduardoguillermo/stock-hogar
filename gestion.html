@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.5.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.6.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -93,6 +93,7 @@
     <div class="vista" id="v2" style="display:none;">
       <h2>Pendientes de completar</h2>
       <div class="sub-h">Escaneos hechos desde el celular, esperando datos</div>
+      <button class="save-row" style="background:var(--teal); color:#fff; border:none; padding:9px 16px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer; margin-bottom:14px;" onclick="traerDeDrive()">☁️ Traer pendientes desde Drive</button>
       <div id="pendList"></div>
     </div>
 
@@ -129,10 +130,22 @@
 </div>
 
 <script src="stock-data.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.5.0';
+const APP_VERSION = '0.6.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+
+function traerDeDrive(){
+  DriveSync.init(async () => {
+    const items = await DriveSync.bajarCola();
+    const nuevos = StockDB.mezclarColaRemota(items);
+    alert(nuevos ? `Se agregaron ${nuevos} pendiente(s) nuevo(s) desde Drive.` : 'No hay pendientes nuevos en Drive.');
+    render();
+  });
+  DriveSync.conectar();
+}
 
 function ir(id, btn){
   document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
