@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stock — Gestión</title>
+<title>Stock en Casa — Gestión</title>
 <link rel="manifest" href="manifest-gestion.json">
 <style>
   :root{
@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock Control</span><span class="ver" id="verLabel">v0.4.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.5.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -130,7 +130,7 @@
 
 <script src="stock-data.js"></script>
 <script>
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.5.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
