@@ -14,8 +14,23 @@ const DriveSync = (() => {
   let folderId = null;
   let fileId = null;
   let renewTimer = null;
+  const TOKEN_KEY = 'stk_drive_token';
 
   function log(...args) { console.log('[DriveSync]', ...args); }
+
+  function guardarToken(token, expiresInSeg) {
+    const vencimiento = Date.now() + (expiresInSeg * 1000) - 60000; // 1 min de margen
+    localStorage.setItem(TOKEN_KEY, JSON.stringify({ token, vencimiento }));
+  }
+  function tokenGuardadoValido() {
+    try {
+      const raw = localStorage.getItem(TOKEN_KEY);
+      if (!raw) return null;
+      const { token, vencimiento } = JSON.parse(raw);
+      if (Date.now() < vencimiento) return token;
+      return null;
+    } catch (e) { return null; }
+  }
 
   function init(onReady) {
     if (!window.google || !google.accounts) {
@@ -23,29 +38,54 @@ const DriveSync = (() => {
       setTimeout(() => init(onReady), 400);
       return;
     }
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: (resp) => {
-        if (resp.error) { log('Error de token', resp); return; }
-        accessToken = resp.access_token;
-        programarRenovacion();
-        if (onReady) onReady();
-      }
-    });
+    if (!tokenClient) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: (resp) => {
+          if (resp.error) { log('Error de token', resp); return; }
+          accessToken = resp.access_token;
+          guardarToken(accessToken, resp.expires_in || 3600);
+          programarRenovacion();
+          if (onReady) onReady();
+        }
+      });
+    }
+    // Si ya hay un token vigente guardado, lo reusamos sin pedir nada
+    const guardado = tokenGuardadoValido();
+    if (guardado) {
+      accessToken = guardado;
+      programarRenovacion();
+      if (onReady) onReady();
+    }
   }
 
   function conectar() {
+    if (accessToken) return; // ya conectado (sesión en memoria o token guardado vigente)
     if (!tokenClient) { log('tokenClient no inicializado todavía'); return; }
-    tokenClient.requestAccessToken({ prompt: accessToken ? '' : 'consent' });
+    tokenClient.requestAccessToken({ prompt: '' }); // intento silencioso primero
   }
 
-  // Renovación silenciosa cada 50 min, igual que en Control Financiero
+  function forzarReconexion() {
+    accessToken = null;
+    localStorage.removeItem(TOKEN_KEY);
+    if (tokenClient) tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  // Renovación silenciosa: se programa según el vencimiento real del token (o 50 min por defecto)
   function programarRenovacion() {
     if (renewTimer) clearTimeout(renewTimer);
+    let delay = 50 * 60 * 1000;
+    try {
+      const raw = localStorage.getItem(TOKEN_KEY);
+      if (raw) {
+        const { vencimiento } = JSON.parse(raw);
+        delay = Math.max(vencimiento - Date.now() - 60000, 5000); // 1 min antes de vencer
+      }
+    } catch (e) { /* usar delay por defecto */ }
     renewTimer = setTimeout(() => {
       tokenClient.requestAccessToken({ prompt: '' });
-    }, 50 * 60 * 1000);
+    }, delay);
   }
 
   async function api(url, opts = {}) {
@@ -133,5 +173,5 @@ const DriveSync = (() => {
     }
   }
 
-  return { init, conectar, subirCola, bajarCola, get conectado() { return !!accessToken; } };
+  return { init, conectar, forzarReconexion, subirCola, bajarCola, get conectado() { return !!accessToken; } };
 })();
