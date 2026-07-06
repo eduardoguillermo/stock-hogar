@@ -1,0 +1,10 @@
+{
+  "name": "Stock — Escáner",
+  "short_name": "Stock Escáner",
+  "start_url": "./escaner.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0d9488",
+  "icons": []
+}
