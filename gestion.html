@@ -316,7 +316,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.18.1';
+const APP_VERSION = '0.18.2';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -338,6 +338,7 @@ function salirDeGestion(){
     const lineaCarpeta = res.carpeta === null ? '➖ Carpeta local: no vinculada' : (res.carpeta ? '✅ Carpeta local: guardado' : '❌ Carpeta local: error');
     const lineaDrive = res.drive ? '✅ Drive: sincronizado' : '➖ Drive: no conectado';
     alert(`Respaldo al salir:\n${lineaCarpeta}\n${lineaDrive}\n✅ Snapshot local: guardado`);
+    window.close();
   });
 }
 
