@@ -4,7 +4,7 @@
    Requiere: CLIENT_ID de OAuth (mismo proyecto de Google Cloud que tus otras apps).
 */
 const DriveSync = (() => {
-  const CLIENT_ID = 'PEGAR_ACA_TU_CLIENT_ID.apps.googleusercontent.com'; // <-- reemplazar
+  const CLIENT_ID = '1049169592532-is5j1j4s1bmgrc9tsq48slrgul8fbj17.apps.googleusercontent.com';
   const SCOPES = 'https://www.googleapis.com/auth/drive.file';
   const CARPETA = 'StockEnCasa';
   const ARCHIVO = 'escaneos_pendientes.json';
