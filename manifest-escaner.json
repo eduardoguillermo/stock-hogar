@@ -1,6 +1,6 @@
 {
-  "name": "Stock — Escáner",
-  "short_name": "Stock Escáner",
+  "name": "Stock en Casa — Captura",
+  "short_name": "Stock en Casa",
   "start_url": "./escaner.html",
   "scope": "./",
   "display": "standalone",
