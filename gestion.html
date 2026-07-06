@@ -168,6 +168,7 @@
       <div class="sub-h">Generada automáticamente según mínimos configurados</div>
       <div class="compra-list"><div id="compraItems"></div></div>
       <button class="share-btn" onclick="compartirLista()">📤 Compartir</button>
+      <button class="share-btn" style="background:transparent; border:1.5px solid var(--teal); color:var(--teal-dark); margin-left:8px;" onclick="copiarListaCompra()">📋 Copiar</button>
     </div>
 
   </div>
@@ -316,15 +317,25 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.19.0';
+const APP_VERSION = '0.20.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
 
 // ---------- Respaldo: snapshot local + carpeta local + backup a Drive ----------
+function asegurarConexionDrive(timeoutMs = 8000){
+  return new Promise(resolve => {
+    if(DriveSync.conectado){ resolve(true); return; }
+    DriveSync.init(() => resolve(true));
+    DriveSync.conectar();
+    setTimeout(() => resolve(DriveSync.conectado), timeoutMs);
+  });
+}
+
 async function respaldar(silencioso = true){
   StockDB.guardarSnapshot();
   const okCarpeta = _stkFolderHandle ? await stkBackupEnCarpeta(_stkFolderHandle) : null;
+  await asegurarConexionDrive();
   let okDrive = false;
   if(DriveSync.conectado){
     try{ await DriveSync.subirBackup(StockDB.exportarTodo()); okDrive = true; }
@@ -696,10 +707,15 @@ function renderCompra(){
   ).join('') || `<div class="empty">Sin faltantes por ahora 🎉</div>`;
 }
 
-async function compartirLista(){
+function textoListaCompra(){
   const bajos = StockDB.bajoMinimo();
-  if(!bajos.length){ alert('No hay nada pendiente de comprar.'); return; }
-  const texto = 'Lista de compra:\n' + bajos.map(p=>`• ${p.nombre} (tengo ${p.stock}, necesito ${p.minimo})`).join('\n');
+  if(!bajos.length) return null;
+  return 'Lista de compra:\n' + bajos.map(p=>`• ${p.nombre} (tengo ${p.stock}, necesito ${p.minimo})`).join('\n');
+}
+
+async function compartirLista(){
+  const texto = textoListaCompra();
+  if(!texto){ alert('No hay nada pendiente de comprar.'); return; }
   if(navigator.share){
     try{ await navigator.share({ title: 'Lista de compra', text: texto }); }
     catch(e){ /* usuario canceló */ }
@@ -707,6 +723,13 @@ async function compartirLista(){
     await navigator.clipboard.writeText(texto);
     alert('Copiado al portapapeles (tu navegador no soporta compartir directo).');
   }
+}
+
+async function copiarListaCompra(){
+  const texto = textoListaCompra();
+  if(!texto){ alert('No hay nada pendiente de comprar.'); return; }
+  await navigator.clipboard.writeText(texto);
+  alert('✅ Copiado al portapapeles. Pegalo donde quieras (Keep, Gmail, WhatsApp Web, etc.)');
 }
 
 if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
