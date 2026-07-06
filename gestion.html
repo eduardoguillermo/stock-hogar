@@ -78,6 +78,7 @@
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
     <button data-v="v4" onclick="ir('v4', this)">⏱ Vencimientos</button>
     <button data-v="v6" onclick="ir('v6', this)">💲 Precios</button>
+    <button data-v="v7" onclick="ir('v7', this)">📋 Movimientos</button>
     <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
     <button id="btnSalirGestion" onclick="salirDeGestion()" style="margin:auto 18px 0; border:1.5px solid #dc2626; color:#f87171; border-radius:8px; padding:9px; text-align:center; justify-content:center;">🚪 Salir</button>
     <button onclick="stkSeleccionarCarpeta()" style="margin:8px 18px 0; border:1.5px solid var(--teal); color:#5eead4; border-radius:8px; padding:9px; text-align:center; justify-content:center;">📂 Vincular carpeta</button>
@@ -130,6 +131,13 @@
       <div class="sub-h">Comparar precio por producto y proveedor (lotes más recientes primero)</div>
       <select id="filtroPrecioProducto" style="max-width:280px; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:14px;" onchange="filtroPrecioEan = this.value || null; renderPrecios();"></select>
       <table id="tblPrecios"><thead><tr><th>Producto</th><th>Proveedor</th><th>Precio</th><th>Fecha</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="vista" id="v7" style="display:none;">
+      <h2>Movimientos</h2>
+      <div class="sub-h">Historial de ingresos y consumos, más reciente primero</div>
+      <select id="filtroMovProducto" style="max-width:280px; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:14px;" onchange="filtroMovEan = this.value || null; renderMovimientos();"></select>
+      <table id="tblMovimientos"><thead><tr><th>Fecha</th><th>Producto</th><th>Movimiento</th><th>Cantidad</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v5" style="display:none;">
@@ -285,7 +293,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.14.0';
+const APP_VERSION = '0.15.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -380,6 +388,26 @@ function render(){
   renderCompra();
   renderProveedores();
   renderPrecios();
+  renderMovimientos();
+}
+
+let filtroMovEan = null;
+
+function renderMovimientos(){
+  const productos = StockDB.listProductos();
+  const selectEl = document.getElementById('filtroMovProducto');
+  selectEl.innerHTML = `<option value="">Todos los productos</option>` +
+    productos.map(p => `<option value="${p.ean}" ${filtroMovEan===p.ean?'selected':''}>${p.nombre}</option>`).join('');
+
+  let movs = StockDB.listMovimientos();
+  if(filtroMovEan) movs = movs.filter(m => m.ean === filtroMovEan);
+
+  const tbody = document.querySelector('#tblMovimientos tbody');
+  tbody.innerHTML = movs.slice(0, 300).map(m=>{
+    const prod = StockDB.getProducto(m.ean);
+    const esIngreso = m.tipo === 'ingreso';
+    return `<tr><td>${m.fecha}</td><td>${prod?prod.nombre:m.ean}</td><td><span class="pill ${esIngreso?'ok':'bad'}">${esIngreso?'➕ Ingreso':'➖ Consumo'}</span></td><td>${m.cantidad}</td></tr>`;
+  }).join('') || `<tr><td colspan="4" class="sub-h">Todavía no hay movimientos registrados.</td></tr>`;
 }
 
 let filtroPrecioEan = null;
