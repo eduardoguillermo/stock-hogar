@@ -7,7 +7,7 @@
    móvil -> Drive -> PC se agrega en la próxima etapa sin tener que tocar este modelo.
 */
 const StockDB = (() => {
-  const KEYS = { productos: 'stk_productos', lotes: 'stk_lotes', cola: 'stk_cola' };
+  const KEYS = { productos: 'stk_productos', lotes: 'stk_lotes', cola: 'stk_cola', movimientos: 'stk_movimientos' };
 
   const _get = (k, def) => {
     try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }
@@ -52,6 +52,7 @@ const StockDB = (() => {
     };
     lotes.push(lote);
     _set(KEYS.lotes, lotes);
+    registrarMovimiento(ean, 'ingreso', lote.cantidad, lote.fechaIngreso);
     return lote;
   }
 
@@ -66,6 +67,7 @@ const StockDB = (() => {
     lote.fechaUltimoEgreso = hoy();
     if (lote.cantidadRestante <= 0) lote.estado = 'consumido';
     _set(KEYS.lotes, lotes);
+    registrarMovimiento(ean, 'consumo', 1, hoy());
     return lote;
   }
 
@@ -138,6 +140,7 @@ const StockDB = (() => {
       productos: _get(KEYS.productos, {}),
       lotes: _get(KEYS.lotes, []),
       cola: _get(KEYS.cola, []),
+      movimientos: _get(KEYS.movimientos, []),
       guardado: Date.now()
     };
   }
@@ -169,14 +172,26 @@ const StockDB = (() => {
     _set(KEYS.productos, data.productos || {});
     _set(KEYS.lotes, data.lotes || []);
     _set(KEYS.cola, data.cola || []);
+    _set(KEYS.movimientos, data.movimientos || []);
     return true;
+  }
+
+  // ---------- Movimientos: historial de ingresos y consumos ----------
+  function registrarMovimiento(ean, tipo, cantidad, fecha) {
+    const movs = _get(KEYS.movimientos, []);
+    movs.push({ id: uid(), ean, tipo, cantidad, fecha: fecha || hoy(), timestamp: Date.now() });
+    if (movs.length > 2000) movs.splice(0, movs.length - 2000); // límite razonable
+    _set(KEYS.movimientos, movs);
+  }
+  function listMovimientos() {
+    return _get(KEYS.movimientos, []).sort((a, b) => b.timestamp - a.timestamp);
   }
 
   return {
     getProducto, listProductos, upsertProducto, eliminarProducto,
     listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
     listCola, encolarEscaneo, marcarProcesado, mezclarColaRemota,
-    proximosAVencer, bajoMinimo, listProveedores,
+    proximosAVencer, bajoMinimo, listProveedores, listMovimientos,
     exportarTodo, guardarSnapshot, listSnapshots, restaurarSnapshot, importarTodo,
     uid, hoy
   };
