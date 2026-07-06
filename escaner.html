@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Stock — Escáner</title>
+<title>Stock en Casa — Captura</title>
 <link rel="manifest" href="manifest-escaner.json">
 <style>
   :root{
@@ -46,7 +46,7 @@
 </head>
 <body>
 
-<div class="topbar"><span class="name">📷 Stock — Captura</span><span class="ver" id="verLabel">v0.1.0</span></div>
+<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.5.0</span></div>
 
 <!-- PANTALLA 1: escaneo -->
 <div class="screen on" id="s1">
@@ -92,7 +92,7 @@
 
 <script src="stock-data.js"></script>
 <script>
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.5.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
