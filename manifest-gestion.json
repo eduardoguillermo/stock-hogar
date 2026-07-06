@@ -1,6 +1,6 @@
 {
-  "name": "Stock — Gestión",
-  "short_name": "Stock Gestión",
+  "name": "Stock en Casa — Gestión",
+  "short_name": "Stock en Casa",
   "start_url": "./gestion.html",
   "scope": "./",
   "display": "standalone",
