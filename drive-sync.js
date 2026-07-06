@@ -1,18 +1,21 @@
-/* drive-sync.js — v0.1.0
-   Sincroniza la cola de escaneos (stk_cola) contra un archivo en Drive,
-   en una carpeta propia "StockEnCasa" para no mezclarse con otras apps.
+/* drive-sync.js — v0.2.0
+   Sincroniza contra archivos en Drive, en una carpeta propia "StockEnCasa"
+   para no mezclarse con otras apps. Maneja dos archivos:
+   - escaneos_pendientes.json (cola de escaneos del celular)
+   - stock_backup.json (respaldo completo: productos + lotes + cola)
    Requiere: CLIENT_ID de OAuth (mismo proyecto de Google Cloud que tus otras apps).
 */
 const DriveSync = (() => {
   const CLIENT_ID = '1049169592532-is5j1j4s1bmgrc9tsq48slrgul8fbj17.apps.googleusercontent.com';
   const SCOPES = 'https://www.googleapis.com/auth/drive.file';
   const CARPETA = 'StockEnCasa';
-  const ARCHIVO = 'escaneos_pendientes.json';
+  const ARCHIVO_COLA = 'escaneos_pendientes.json';
+  const ARCHIVO_BACKUP = 'stock_backup.json';
 
   let tokenClient = null;
   let accessToken = null;
   let folderId = null;
-  let fileId = null;
+  const fileIds = {}; // cache de fileId por nombre de archivo
   let renewTimer = null;
   const TOKEN_KEY = 'stk_drive_token';
 
@@ -114,24 +117,24 @@ const DriveSync = (() => {
     return folderId;
   }
 
-  async function ensureFile() {
-    if (fileId) return fileId;
+  async function ensureFile(nombreArchivo) {
+    if (fileIds[nombreArchivo]) return fileIds[nombreArchivo];
     await ensureFolder();
-    const q = encodeURIComponent(`name='${ARCHIVO}' and '${folderId}' in parents and trashed=false`);
+    const q = encodeURIComponent(`name='${nombreArchivo}' and '${folderId}' in parents and trashed=false`);
     const resp = await api(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
     const data = await resp.json();
-    if (data.files && data.files.length) { fileId = data.files[0].id; return fileId; }
+    if (data.files && data.files.length) { fileIds[nombreArchivo] = data.files[0].id; return fileIds[nombreArchivo]; }
 
     // Archivo no existe: se crea vacío
-    fileId = await subirJSON({ items: [] }, true);
-    return fileId;
+    fileIds[nombreArchivo] = await subirJSON(nombreArchivo, {}, true);
+    return fileIds[nombreArchivo];
   }
 
-  async function subirJSON(obj, creando = false) {
+  async function subirJSON(nombreArchivo, obj, creando = false) {
     await ensureFolder();
     const boundary = 'stockencasa_boundary';
     const metadata = creando
-      ? { name: ARCHIVO, parents: [folderId], mimeType: 'application/json' }
+      ? { name: nombreArchivo, parents: [folderId], mimeType: 'application/json' }
       : { mimeType: 'application/json' };
     const body =
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
@@ -139,7 +142,7 @@ const DriveSync = (() => {
 
     const url = creando
       ? 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart'
-      : `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`;
+      : `https://www.googleapis.com/upload/drive/v3/files/${fileIds[nombreArchivo]}?uploadType=multipart`;
 
     const resp = await api(url, {
       method: creando ? 'POST' : 'PATCH',
@@ -150,22 +153,22 @@ const DriveSync = (() => {
     return data.id;
   }
 
-  async function descargarJSON() {
-    await ensureFile();
-    const resp = await api(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+  async function descargarJSON(nombreArchivo) {
+    await ensureFile(nombreArchivo);
+    const resp = await api(`https://www.googleapis.com/drive/v3/files/${fileIds[nombreArchivo]}?alt=media`);
     return resp.json();
   }
 
   // ---------- Uso desde el escáner: sube la cola completa (pendientes) ----------
   async function subirCola(itemsCola) {
-    await ensureFile();
-    await subirJSON({ items: itemsCola, actualizado: Date.now() });
+    await ensureFile(ARCHIVO_COLA);
+    await subirJSON(ARCHIVO_COLA, { items: itemsCola, actualizado: Date.now() });
   }
 
   // ---------- Uso desde gestión PC: baja la cola remota ----------
   async function bajarCola() {
     try {
-      const data = await descargarJSON();
+      const data = await descargarJSON(ARCHIVO_COLA);
       return data.items || [];
     } catch (e) {
       log('Error al bajar cola', e);
@@ -173,5 +176,24 @@ const DriveSync = (() => {
     }
   }
 
-  return { init, conectar, forzarReconexion, subirCola, bajarCola, get conectado() { return !!accessToken; } };
+  // ---------- Backup completo (productos + lotes + cola) ----------
+  async function subirBackup(datosCompletos) {
+    await ensureFile(ARCHIVO_BACKUP);
+    await subirJSON(ARCHIVO_BACKUP, datosCompletos);
+  }
+
+  async function bajarBackup() {
+    try {
+      return await descargarJSON(ARCHIVO_BACKUP);
+    } catch (e) {
+      log('Error al bajar backup', e);
+      return null;
+    }
+  }
+
+  return {
+    init, conectar, forzarReconexion,
+    subirCola, bajarCola, subirBackup, bajarBackup,
+    get conectado() { return !!accessToken; }
+  };
 })();
