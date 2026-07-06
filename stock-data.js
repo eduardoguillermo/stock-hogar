@@ -85,10 +85,10 @@ const StockDB = (() => {
 
   // ---------- Vencimientos / alertas ----------
   function proximosAVencer(diasUmbral = 5) {
-    const limite = new Date(); limite.setDate(limite.getDate() + diasUmbral);
     return listLotes()
       .filter(l => l.estado === 'activo' && l.cantidadRestante > 0 && l.vencimiento)
       .map(l => ({ ...l, dias: Math.ceil((new Date(l.vencimiento) - new Date()) / 86400000) }))
+      .filter(l => l.dias <= diasUmbral)
       .sort((a, b) => a.dias - b.dias);
   }
   function bajoMinimo() {
