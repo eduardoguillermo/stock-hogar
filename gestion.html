@@ -109,7 +109,7 @@
           <div style="display:flex; align-items:flex-end;"><button onclick="altaProducto()">Agregar producto</button></div>
         </div>
       </div>
-      <table id="tblProd"><thead><tr><th>Producto</th><th>Rubro</th><th>Guarda</th><th>Mínimo</th><th>Notas</th></tr></thead><tbody></tbody></table>
+      <table id="tblProd"><thead><tr><th>Producto</th><th>Rubro</th><th>Guarda</th><th>Mínimo</th><th>Notas</th><th></th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v4" style="display:none;">
@@ -261,11 +261,26 @@ function altaProducto(){
 
 function renderProductos(){
   const tbody = document.querySelector('#tblProd tbody');
+  const rubros = ['Almacén','Limpieza','Lácteos'];
+  const guardas = ['Alacena','Heladera','Freezer','Depósito'];
+  const opt = (lista, actual) => lista.map(o => `<option ${o===actual?'selected':''}>${o}</option>`).join('');
+
   tbody.innerHTML = StockDB.listProductos().map(p => `
     <tr>
-      <td>${p.nombre}</td><td>${p.rubro}</td><td>${p.guarda||'—'}</td><td>${p.minimo}</td>
-      <td><input class="notes-inline" value="${p.notas||''}" onchange="StockDB.upsertProducto({ean:'${p.ean}', notas:this.value})"></td>
-    </tr>`).join('') || `<tr><td colspan="5" class="sub-h">Sin productos aún.</td></tr>`;
+      <td><input class="notes-inline" value="${(p.nombre||'').replace(/"/g,'&quot;')}" onchange="StockDB.upsertProducto({ean:'${p.ean}', nombre:this.value}); render();"></td>
+      <td><select class="notes-inline" onchange="StockDB.upsertProducto({ean:'${p.ean}', rubro:this.value}); render();">${opt(rubros, p.rubro)}</select></td>
+      <td><select class="notes-inline" onchange="StockDB.upsertProducto({ean:'${p.ean}', guarda:this.value}); render();">${opt(guardas, p.guarda)}</select></td>
+      <td><input class="notes-inline" type="number" style="width:60px;" value="${p.minimo}" onchange="StockDB.upsertProducto({ean:'${p.ean}', minimo:Number(this.value)||2}); render();"></td>
+      <td><input class="notes-inline" value="${(p.notas||'').replace(/"/g,'&quot;')}" onchange="StockDB.upsertProducto({ean:'${p.ean}', notas:this.value})"></td>
+      <td><button style="background:none; border:none; color:var(--bad); cursor:pointer; font-size:16px;" title="Borrar producto" onclick="borrarProducto('${p.ean}','${(p.nombre||'').replace(/'/g,"\\'")}')">🗑️</button></td>
+    </tr>`).join('') || `<tr><td colspan="6" class="sub-h">Sin productos aún.</td></tr>`;
+}
+
+function borrarProducto(ean, nombre){
+  if(confirm(`¿Borrar "${nombre || ean}"? Se pierde también su historial de lotes/vencimientos.`)){
+    StockDB.eliminarProducto(ean);
+    render();
+  }
 }
 
 function renderVencimientos(){
