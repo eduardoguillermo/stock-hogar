@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock — Gestión</title>
+<link rel="manifest" href="manifest-gestion.json">
+<style>
+  :root{
+    --teal:#0d9488; --teal-dark:#0f766e; --teal-light:#ccfbf1;
+    --bg:#f1f5f9; --card:#ffffff; --border:#e2e8f0;
+    --ink:#1e293b; --sub:#64748b; --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --dev:#f59e0b; --sig:#93c5fd;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink);}
+  .app{display:flex; min-height:100vh;}
+  .sidebar{width:220px; background:#0f2027; color:#cbd5e1; display:flex; flex-direction:column; padding:18px 0; flex-shrink:0;}
+  .sidebar .brand{padding:0 18px 14px; font-weight:700; color:#fff; font-size:16px; border-bottom:1px solid #1e3a3a; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;}
+  .sidebar .brand .ver{font-family:monospace; font-size:10px; color:#5eead4;}
+  .sidebar button{background:none; border:none; color:#93a3ad; text-align:left; padding:11px 18px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;}
+  .sidebar button.active{background:var(--teal); color:#fff;}
+  .sidebar .badge{margin-left:auto; background:var(--dev); color:#1e293b; font-size:10px; font-weight:800; padding:1px 6px; border-radius:10px;}
+  .signature{margin-top:auto; text-align:center; font-family:'Dancing Script',cursive; color:var(--sig); font-size:14px; padding-top:16px;}
+
+  .main{flex:1; padding:26px 30px; overflow-y:auto;}
+  .main h2{margin:0 0 4px; font-size:21px;}
+  .sub-h{color:var(--sub); font-size:12.5px; margin-bottom:20px;}
+
+  .kpis{display:flex; gap:12px; margin-bottom:22px; flex-wrap:wrap;}
+  .kpi{flex:1; min-width:130px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px;}
+  .kpi .n{font-size:22px; font-weight:700; color:var(--teal-dark);}
+  .kpi .l{font-size:11.5px; color:var(--sub);}
+
+  table{width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border);}
+  th{background:#f8fafc; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--sub); padding:10px 12px; border-bottom:1px solid var(--border);}
+  td{padding:10px 12px; font-size:13px; border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  .pill{font-size:10.5px; font-family:monospace; padding:3px 8px; border-radius:20px; font-weight:700;}
+  .pill.ok{background:#dcfce7; color:var(--ok);}
+  .pill.warn{background:#fef3c7; color:var(--warn);}
+  .pill.bad{background:#fee2e2; color:var(--bad);}
+
+  .pend-card{background:var(--card); border:1px solid var(--border); border-left:4px solid var(--dev); border-radius:10px; padding:14px 16px; margin-bottom:12px;}
+  .pend-card.rem{border-left-color:var(--bad);}
+  .pend-card .top{display:flex; justify-content:space-between; align-items:center;}
+  .pend-card .top b{font-size:14px;}
+  .op{font-family:monospace; font-size:10.5px; padding:3px 9px; border-radius:20px; font-weight:700;}
+  .op.add{background:#dcfce7; color:var(--ok);}
+  .op.rem{background:#fee2e2; color:var(--bad);}
+  .pend-form{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;}
+  .pend-form label{font-size:10.5px; color:var(--sub); font-weight:700; display:block; margin-bottom:3px;}
+  .pend-form input, .pend-form select{width:100%; padding:8px 9px; border:1px solid var(--border); border-radius:7px; font-size:12.5px;}
+  .save-row{grid-column:1/-1; text-align:right; margin-top:4px;}
+  .save-row button{background:var(--teal); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer;}
+  .empty{color:var(--sub); font-size:13px; padding:20px; text-align:center; background:var(--card); border:1px dashed var(--border); border-radius:12px;}
+
+  .form-card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:18px;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  .form-grid label{font-size:10.5px; color:var(--sub); font-weight:700; display:block; margin-bottom:3px;}
+  .form-grid input, .form-grid select, .form-grid textarea{width:100%; padding:8px 9px; border:1px solid var(--border); border-radius:7px; font-size:12.5px;}
+  .form-grid button{background:var(--teal); color:#fff; border:none; padding:9px 16px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer;}
+
+  .compra-list{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px;}
+  .compra-item{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .compra-item:last-child{border-bottom:none;}
+  .share-btn{margin-top:14px; background:var(--teal); color:#fff; border:none; padding:11px 18px; border-radius:9px; font-weight:700; font-size:13px; cursor:pointer;}
+
+  .notes-inline{width:100%; padding:6px 8px; border:1px solid transparent; border-radius:6px; font-size:12.5px; background:transparent;}
+  .notes-inline:focus{border-color:var(--border); background:#fff;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand"><span>📦 Stock Control</span><span class="ver">v0.1.0</span></div>
+    <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
+    <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
+    <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
+    <button data-v="v4" onclick="ir('v4', this)">⏱ Vencimientos</button>
+    <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
+    <div class="signature">Development by Guille</div>
+  </div>
+
+  <div class="main">
+
+    <div class="vista" id="v1">
+      <h2>Dashboard</h2>
+      <div class="sub-h">Resumen general de stock</div>
+      <div class="kpis" id="kpis"></div>
+      <table id="tblDash"><thead><tr><th>Producto</th><th>Rubro</th><th>Stock</th><th>Estado</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="vista" id="v2" style="display:none;">
+      <h2>Pendientes de completar</h2>
+      <div class="sub-h">Escaneos hechos desde el celular, esperando datos</div>
+      <div id="pendList"></div>
+    </div>
+
+    <div class="vista" id="v3" style="display:none;">
+      <h2>Productos</h2>
+      <div class="sub-h">Alta manual y edición</div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div><label>Código EAN</label><input id="npEan"></div>
+          <div><label>Nombre</label><input id="npNombre"></div>
+          <div><label>Rubro</label><select id="npRubro"><option>Almacén</option><option>Limpieza</option><option>Lácteos</option></select></div>
+          <div><label>Lugar de guarda</label><select id="npGuarda"><option>Alacena</option><option>Heladera</option><option>Freezer</option><option>Depósito</option></select></div>
+          <div><label>Stock mínimo</label><input id="npMinimo" type="number" value="2"></div>
+          <div style="display:flex; align-items:flex-end;"><button onclick="altaProducto()">Agregar producto</button></div>
+        </div>
+      </div>
+      <table id="tblProd"><thead><tr><th>Producto</th><th>Rubro</th><th>Guarda</th><th>Mínimo</th><th>Notas</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="vista" id="v4" style="display:none;">
+      <h2>Vencimientos</h2>
+      <div class="sub-h">Orden de prioridad de consumo (FEFO)</div>
+      <table id="tblVenc"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Cant.</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="vista" id="v5" style="display:none;">
+      <h2>Lista de compra</h2>
+      <div class="sub-h">Generada automáticamente según mínimos configurados</div>
+      <div class="compra-list"><div id="compraItems"></div></div>
+      <button class="share-btn" onclick="compartirLista()">📤 Compartir</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="stock-data.js"></script>
+<script>
+function ir(id, btn){
+  document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.vista').forEach(v=>v.style.display='none');
+  document.getElementById(id).style.display='block';
+  render();
+}
+
+function pill(stock, minimo){
+  if(stock < minimo) return `<span class="pill bad">bajo mínimo</span>`;
+  return `<span class="pill ok">ok</span>`;
+}
+
+function render(){
+  renderDashboard();
+  renderPendientes();
+  renderProductos();
+  renderVencimientos();
+  renderCompra();
+}
+
+function renderDashboard(){
+  const productos = StockDB.listProductos();
+  const bajos = StockDB.bajoMinimo();
+  const vencenPronto = StockDB.proximosAVencer(5);
+  const pendCount = StockDB.listCola().length;
+
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="n">${productos.length}</div><div class="l">Productos activos</div></div>
+    <div class="kpi"><div class="n">${bajos.length}</div><div class="l">Bajo mínimo</div></div>
+    <div class="kpi"><div class="n">${vencenPronto.length}</div><div class="l">Por vencer (5d)</div></div>
+    <div class="kpi"><div class="n">${pendCount}</div><div class="l">Pendientes de PC</div></div>`;
+
+  const tbody = document.querySelector('#tblDash tbody');
+  tbody.innerHTML = productos.map(p=>{
+    const stock = StockDB.stockDe(p.ean);
+    return `<tr><td>${p.nombre}</td><td>${p.rubro}</td><td>${stock}</td><td>${pill(stock, p.minimo)}</td></tr>`;
+  }).join('') || `<tr><td colspan="4" class="sub-h">Todavía no hay productos cargados.</td></tr>`;
+}
+
+function renderPendientes(){
+  const cola = StockDB.listCola();
+  document.getElementById('badgePend').textContent = cola.length;
+  const cont = document.getElementById('pendList');
+  if(!cola.length){ cont.innerHTML = `<div class="empty">No hay escaneos pendientes 🎉</div>`; return; }
+
+  cont.innerHTML = cola.map(item => {
+    const prod = StockDB.getProducto(item.ean);
+    const esAlta = item.productoNuevo || !prod;
+    const nombre = prod ? prod.nombre : item.ean;
+
+    if(item.tipo === 'consumir'){
+      return `
+        <div class="pend-card rem">
+          <div class="top"><b>${nombre}</b><span class="op rem">CONSUMIR</span></div>
+          <div class="sub-h" style="margin:8px 0 0;">Se descuenta el lote más próximo a vencer (FEFO). Sin datos adicionales.</div>
+          <div class="save-row"><button onclick="confirmarConsumo('${item.id}','${item.ean}')">Confirmar</button></div>
+        </div>`;
+    }
+
+    if(esAlta){
+      return `
+        <div class="pend-card">
+          <div class="top"><b>Código ${item.ean}</b><span class="op add">REPONER · PRODUCTO NUEVO</span></div>
+          <div class="pend-form">
+            <div><label>Nombre</label><input id="f_nombre_${item.id}"></div>
+            <div><label>Rubro</label><select id="f_rubro_${item.id}"><option>Almacén</option><option>Limpieza</option><option>Lácteos</option></select></div>
+            <div><label>Guarda</label><select id="f_guarda_${item.id}"><option>Alacena</option><option>Heladera</option><option>Freezer</option><option>Depósito</option></select></div>
+            <div><label>Mínimo</label><input id="f_minimo_${item.id}" type="number" value="2"></div>
+            <div><label>Cantidad</label><input id="f_cant_${item.id}" type="number" value="1"></div>
+            <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo"></div>
+            <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
+            <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
+            <div class="save-row"><button onclick="altaYReponer('${item.id}','${item.ean}')">Guardar</button></div>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="pend-card">
+        <div class="top"><b>${nombre}</b><span class="op add">REPONER</span></div>
+        <div class="pend-form">
+          <div><label>Cantidad</label><input id="f_cant_${item.id}" type="number" value="1"></div>
+          <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo"></div>
+          <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
+          <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
+          <div class="save-row"><button onclick="completarReposicion('${item.id}','${item.ean}')">Guardar</button></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function confirmarConsumo(id, ean){
+  const lote = StockDB.consumirUno(ean);
+  if(!lote) alert('No hay stock activo para descontar.');
+  StockDB.marcarProcesado(id);
+  render();
+}
+
+function completarReposicion(id, ean){
+  const g = k => document.getElementById(`f_${k}_${id}`).value;
+  StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: g('precio'), vencimiento: g('venc') || null });
+  StockDB.marcarProcesado(id);
+  render();
+}
+
+function altaYReponer(id, ean){
+  const g = k => document.getElementById(`f_${k}_${id}`).value;
+  StockDB.upsertProducto({ ean, nombre: g('nombre'), rubro: g('rubro'), guarda: g('guarda'), minimo: Number(g('minimo'))||2 });
+  StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: g('precio'), vencimiento: g('venc') || null });
+  StockDB.marcarProcesado(id);
+  render();
+}
+
+function altaProducto(){
+  const ean = document.getElementById('npEan').value.trim();
+  if(!ean){ alert('Falta el código EAN'); return; }
+  StockDB.upsertProducto({
+    ean, nombre: document.getElementById('npNombre').value.trim() || ean,
+    rubro: document.getElementById('npRubro').value,
+    guarda: document.getElementById('npGuarda').value,
+    minimo: Number(document.getElementById('npMinimo').value) || 2
+  });
+  ['npEan','npNombre'].forEach(id=>document.getElementById(id).value='');
+  render();
+}
+
+function renderProductos(){
+  const tbody = document.querySelector('#tblProd tbody');
+  tbody.innerHTML = StockDB.listProductos().map(p => `
+    <tr>
+      <td>${p.nombre}</td><td>${p.rubro}</td><td>${p.guarda||'—'}</td><td>${p.minimo}</td>
+      <td><input class="notes-inline" value="${p.notas||''}" onchange="StockDB.upsertProducto({ean:'${p.ean}', notas:this.value})"></td>
+    </tr>`).join('') || `<tr><td colspan="5" class="sub-h">Sin productos aún.</td></tr>`;
+}
+
+function renderVencimientos(){
+  const tbody = document.querySelector('#tblVenc tbody');
+  const lotes = StockDB.proximosAVencer(9999);
+  tbody.innerHTML = lotes.map(l=>{
+    const prod = StockDB.getProducto(l.ean);
+    const cls = l.dias <= 3 ? 'bad' : (l.dias <= 7 ? 'warn' : 'ok');
+    return `<tr><td>${prod?prod.nombre:l.ean}</td><td>${l.fechaIngreso}</td><td>${l.vencimiento}</td><td>${l.cantidadRestante}</td><td><span class="pill ${cls}">${l.dias} días</span></td></tr>`;
+  }).join('') || `<tr><td colspan="5" class="sub-h">No hay lotes con vencimiento cargado.</td></tr>`;
+}
+
+function renderCompra(){
+  const bajos = StockDB.bajoMinimo();
+  document.getElementById('compraItems').innerHTML = bajos.map(p=>
+    `<div class="compra-item"><span>${p.nombre}</span><span>${p.stock} → completar a ${p.minimo}</span></div>`
+  ).join('') || `<div class="empty">Sin faltantes por ahora 🎉</div>`;
+}
+
+async function compartirLista(){
+  const bajos = StockDB.bajoMinimo();
+  if(!bajos.length){ alert('No hay nada pendiente de comprar.'); return; }
+  const texto = 'Lista de compra:\n' + bajos.map(p=>`• ${p.nombre} (tengo ${p.stock}, necesito ${p.minimo})`).join('\n');
+  if(navigator.share){
+    try{ await navigator.share({ title: 'Lista de compra', text: texto }); }
+    catch(e){ /* usuario canceló */ }
+  } else {
+    await navigator.clipboard.writeText(texto);
+    alert('Copiado al portapapeles (tu navegador no soporta compartir directo).');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
