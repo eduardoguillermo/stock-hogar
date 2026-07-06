@@ -46,7 +46,7 @@
 </head>
 <body>
 
-<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.16.1</span></div>
+<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.17.0</span></div>
 
 <!-- PANTALLA 1: escaneo -->
 <div class="screen on" id="s1">
@@ -95,7 +95,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.16.1';
+const APP_VERSION = '0.17.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -211,7 +211,14 @@ document.addEventListener('visibilitychange', () => {
 async function subirColaADrive(){
   if(!DriveSync.conectado) return; // todavía no conectaste Drive; se sube cuando conectes
   try{
-    await DriveSync.subirCola(StockDB.listCola());
+    const pendientesLocales = StockDB.listCola();
+    const remotos = await DriveSync.bajarCola(); // lo que ya hay subido, por si la PC no lo bajó todavía
+    const idsRemotos = new Set(remotos.map(r => r.id));
+    const combinados = remotos.concat(pendientesLocales.filter(p => !idsRemotos.has(p.id)));
+    await DriveSync.subirCola(combinados);
+    // Ya está a salvo en Drive (combinado, sin pisar nada): del lado del celular, el trabajo terminó
+    pendientesLocales.forEach(item => StockDB.marcarProcesado(item.id));
+    actualizarBadge();
     document.getElementById('syncStatus').textContent = '☁️ Sincronizado con Drive · ' + new Date().toLocaleTimeString();
   }catch(e){
     console.error(e);
