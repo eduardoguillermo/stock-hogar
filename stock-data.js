@@ -130,10 +130,46 @@ const StockDB = (() => {
     return [...set].sort((a, b) => a.localeCompare(b));
   }
 
+  // ---------- Respaldo: snapshots locales (máx 10) + export/import completo ----------
+  const SNAP_KEY = 'stk_snapshots';
+
+  function exportarTodo() {
+    return {
+      productos: _get(KEYS.productos, {}),
+      lotes: _get(KEYS.lotes, []),
+      cola: _get(KEYS.cola, []),
+      guardado: Date.now()
+    };
+  }
+
+  function guardarSnapshot() {
+    try {
+      const snaps = _get(SNAP_KEY, []);
+      snaps.push(exportarTodo());
+      if (snaps.length > 10) snaps.splice(0, snaps.length - 10);
+      _set(SNAP_KEY, snaps);
+      return true;
+    } catch (e) { console.error('Error al guardar snapshot', e); return false; }
+  }
+
+  function listSnapshots() { return _get(SNAP_KEY, []); }
+
+  function restaurarSnapshot(indice) {
+    const snaps = listSnapshots();
+    const snap = snaps[indice];
+    if (!snap) return false;
+    _set(KEYS.productos, snap.productos || {});
+    _set(KEYS.lotes, snap.lotes || []);
+    _set(KEYS.cola, snap.cola || []);
+    return true;
+  }
+
   return {
     getProducto, listProductos, upsertProducto, eliminarProducto,
     listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
     listCola, encolarEscaneo, marcarProcesado, mezclarColaRemota,
-    proximosAVencer, bajoMinimo, listProveedores, uid, hoy
+    proximosAVencer, bajoMinimo, listProveedores,
+    exportarTodo, guardarSnapshot, listSnapshots, restaurarSnapshot,
+    uid, hoy
   };
 })();
