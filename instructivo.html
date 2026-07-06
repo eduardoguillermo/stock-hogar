@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock en Casa · Manual de Usuario</title>
+<style>
+  :root {
+    --primary: #0d9488;
+    --primary-light: #f0fdfa;
+    --green: #16a34a;
+    --green-light: #ecfdf5;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --blue: #0284c7;
+    --blue-light: #f0f9ff;
+    --purple: #a855f7;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-w);
+    background: #0f2027;
+    color: #cbd5e1;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    padding: 0 0 32px 0;
+    z-index: 100;
+  }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid #1e3a3a; margin-bottom: 8px; }
+  .sidebar-logo h1 { font-size: 16px; font-weight: 700; color: white; }
+  .sidebar-logo p { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .sidebar a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 20px; color: #94a3b8; text-decoration: none;
+    font-size: 13px; border-left: 3px solid transparent; transition: all .15s;
+  }
+  .sidebar a:hover, .sidebar a.active { color: white; background: #0b1a1a; border-left-color: var(--primary); }
+  .sidebar .section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+    color: #475569; padding: 16px 20px 4px;
+  }
+  .content { margin-left: var(--sidebar-w); flex: 1; max-width: 860px; padding: 40px 48px 80px; }
+
+  .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+  .section-header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; }
+  .section-icon { font-size: 28px; }
+  .section-title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .section-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  h2 { font-size: 17px; font-weight: 700; margin: 28px 0 10px; color: var(--text); }
+  h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: var(--text); }
+  p { margin-bottom: 10px; color: #374151; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 5px; color: #374151; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+  .card-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .card-body { font-size: 13px; color: #4b5563; }
+
+  .note { background: var(--amber-light); border-left: 4px solid var(--amber); border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 14px 0; font-size: 13px; color: #78350f; }
+  .tip { background: var(--green-light); border-left: 4px solid var(--green); border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 14px 0; font-size: 13px; color: #065f46; }
+  .warning { background: var(--red-light); border-left: 4px solid var(--red); border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 14px 0; font-size: 13px; color: #7f1d1d; }
+  .info { background: var(--blue-light); border-left: 4px solid var(--blue); border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 14px 0; font-size: 13px; color: #0c4a6e; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+  th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
+  td { padding: 8px 12px; border: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) { background: #f8fafc; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-blue  { background: #dbeafe; color: #1e40af; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-red   { background: #fee2e2; color: #991b1b; }
+  .badge-teal  { background: #ccfbf1; color: #0f766e; }
+
+  code { background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: 'Courier New', monospace; font-size: 12px; color: #1e293b; }
+
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-num { counter-increment: step; min-width: 28px; height: 28px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .step-body { padding-top: 4px; font-size: 14px; }
+
+  .hero { background: linear-gradient(135deg, #0f2027 0%, #1e3a3a 100%); color: white; padding: 40px 48px; margin: -40px -48px 48px; }
+  .hero h1 { font-size: 28px; font-weight: 800; }
+  .hero p { color: #94a3b8; margin-top: 6px; font-size: 15px; }
+  .hero-badges { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+  .dash-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; border-left: 4px solid currentColor; }
+  .dash-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; }
+  .dash-card .value { font-size: 18px; font-weight: 700; }
+
+  .changelog-entry { border-left: 3px solid var(--primary); padding: 4px 0 4px 16px; margin-bottom: 28px; }
+  .changelog-version { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .changelog-version .v-num { font-size: 16px; font-weight: 700; color: var(--text); }
+  .changelog-list { margin: 0; padding-left: 20px; font-size: 13.5px; color: #4b5563; line-height: 1.7; }
+  .changelog-list li { margin-bottom: 3px; }
+  .changelog-tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-right: 4px; }
+  .tag-feature { background: #dbeafe; color: #1e40af; }
+  .tag-fix { background: #fee2e2; color: #991b1b; }
+  .tag-infra { background: #f3e8ff; color: #6b21a8; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .content { margin-left: 0; padding: 20px 16px; }
+    .hero { margin: -20px -16px 32px; padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>📦 Stock en Casa</h1>
+    <p>Manual de usuario</p>
+  </div>
+  <div class="section-label">Empezar</div>
+  <a href="#inicio">🏁 Qué es esto</a>
+  <a href="#modelo">🧩 Cómo se organiza</a>
+  <div class="section-label">Uso diario</div>
+  <a href="#escaner">📷 Escáner (celular)</a>
+  <a href="#pendientes">🗂️ Pendientes (PC)</a>
+  <a href="#productos">☰ Productos</a>
+  <div class="section-label">Consultas</div>
+  <a href="#vencimientos">⏱ Vencimientos</a>
+  <a href="#precios">💲 Precios</a>
+  <a href="#movimientos">📋 Movimientos</a>
+  <a href="#consumo">📊 Consumo 30 días</a>
+  <a href="#compra">🛒 Lista de compra</a>
+  <div class="section-label">Datos y respaldo</div>
+  <a href="#drive">☁️ Sincronización con Drive</a>
+  <a href="#respaldo">💾 Respaldo y restauración</a>
+  <div class="section-label">Referencia</div>
+  <a href="#changelog">🧾 Historial de cambios</a>
+</nav>
+
+<div class="content">
+
+  <div class="hero">
+    <h1>📦 Stock en Casa</h1>
+    <p>Control de stock del hogar por escaneo de código de barras — Almacén, Limpieza y Lácteos.</p>
+    <div class="hero-badges">
+      <span class="badge badge-teal">v0.17.1</span>
+      <span class="badge badge-blue">Escáner + Gestión</span>
+      <span class="badge badge-green">Sincronizado con Drive</span>
+    </div>
+  </div>
+
+  <div class="section" id="inicio">
+    <div class="section-header">
+      <span class="section-icon">🏁</span>
+      <div><div class="section-title">Qué es esto</div><div class="section-subtitle">La idea general de la app</div></div>
+    </div>
+    <p>Stock en Casa lleva la cuenta de lo que tenés guardado en tu casa: cuántos envases de cada producto, cuándo entraron, cuándo se consumieron, si están por vencer y si hay que reponerlos.</p>
+    <p>Está pensada en dos partes separadas, cada una con su trabajo:</p>
+    <div class="card">
+      <div class="card-title">📷 El celular escanea</div>
+      <div class="card-body">Apuntás la cámara a un código de barras, elegís si es un ingreso (Reponer) o un consumo (Consumir), y listo. Nada de formularios en el celular.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🖥️ La PC administra</div>
+      <div class="card-body">Ahí completás los datos (proveedor, precio, vencimiento), das de alta productos nuevos, y consultás vencimientos, precios, movimientos y la lista de compra.</div>
+    </div>
+    <div class="tip">Todo se sincroniza a través de Google Drive — no hace falta que el celular y la PC estén conectados al mismo tiempo.</div>
+  </div>
+
+  <div class="section" id="modelo">
+    <div class="section-header">
+      <span class="section-icon">🧩</span>
+      <div><div class="section-title">Cómo se organiza</div><div class="section-subtitle">Productos, lotes y stock</div></div>
+    </div>
+    <h2>Producto</h2>
+    <p>Es la ficha fija de un artículo: nombre, rubro (Almacén / Limpieza / Lácteos), lugar de guarda, stock mínimo y notas. Se da de alta una sola vez por código de barras.</p>
+    <h2>Lote</h2>
+    <p>Cada vez que reponés, se crea un <strong>lote</strong> nuevo: cantidad, proveedor, precio y vencimiento propios. Así, si comprás el mismo producto en dos lugares distintos o con vencimientos distintos, cada compra queda registrada por separado.</p>
+    <h2>Stock</h2>
+    <p>El stock que ves en cualquier pantalla es la suma de todos los lotes activos de ese producto. Al consumir, se descuenta del lote que vence antes (orden FEFO: <em>primero lo que vence primero</em>).</p>
+    <div class="note"><strong>El código de barras no trae el nombre del producto.</strong> Es solo un número — la app intenta buscarlo en Open Food Facts como ayuda, pero si no lo encuentra (común en productos de Limpieza o marcas locales), hay que escribirlo a mano una sola vez.</div>
+  </div>
+
+  <div class="section" id="escaner">
+    <div class="section-header">
+      <span class="section-icon">📷</span>
+      <div><div class="section-title">Escáner (celular)</div><div class="section-subtitle">Lo único que hace el celular</div></div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body">Abrí el escáner y aceptá el permiso de cámara la primera vez.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body">Apuntá al código de barras. Si tu navegador no lo detecta solo, escribilo en el campo manual.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body">Elegí <strong>➕ Reponer</strong> (acabás de comprarlo) o <strong>➖ Consumir</strong> (empezaste a usarlo).</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body">Listo — se sube solo a Drive. El resto de los datos se completan después en la PC.</div></div>
+    </div>
+    <div class="info">Requiere Chrome o Brave en Android (BarcodeDetector nativo). Safari/iOS no soporta la lectura automática todavía; siempre queda el código manual como respaldo.</div>
+    <div class="tip">Tocá <strong>☁️ Conectar con Drive</strong> una sola vez. De ahí en más se reconecta solo cada vez que abrís la app.</div>
+  </div>
+
+  <div class="section" id="pendientes">
+    <div class="section-header">
+      <span class="section-icon">🗂️</span>
+      <div><div class="section-title">Pendientes (PC)</div><div class="section-subtitle">Acá se completan los escaneos del celular</div></div>
+    </div>
+    <p>Tocá <strong>☁️ Traer pendientes desde Drive</strong> para bajar lo escaneado en el celular. Cada tarjeta pendiente se resuelve distinto según el caso:</p>
+    <table>
+      <tr><th>Caso</th><th>Qué pide</th></tr>
+      <tr><td>Producto nuevo + Reponer</td><td>Nombre, rubro, guarda, mínimo, cantidad, proveedor, precio, vencimiento</td></tr>
+      <tr><td>Producto conocido + Reponer</td><td>Cantidad, proveedor, precio, vencimiento (autocompleta proveedor con los ya usados)</td></tr>
+      <tr><td>Consumir</td><td>Nada — descuenta solo el lote más próximo a vencer. Solo confirmás.</td></tr>
+    </table>
+    <p>Si algo se escaneó por error, usá <strong>Descartar</strong> en vez de completarlo — pide confirmación antes de aplicarlo.</p>
+  </div>
+
+  <div class="section" id="productos">
+    <div class="section-header">
+      <span class="section-icon">☰</span>
+      <div><div class="section-title">Productos</div><div class="section-subtitle">Alta manual, edición y borrado</div></div>
+    </div>
+    <p>Podés dar de alta un producto directamente acá (sin pasar por el celular) completando el formulario de arriba.</p>
+    <p>La tabla es <strong>editable en línea</strong>: tocás cualquier campo (nombre, rubro, guarda, mínimo, notas) y se guarda solo al cambiarlo, sin botón de "guardar" aparte.</p>
+    <div class="warning">Borrar un producto (🗑️) también borra sus lotes y su historial de vencimientos asociado. Pide confirmación antes de aplicarlo.</div>
+  </div>
+
+  <div class="section" id="vencimientos">
+    <div class="section-header">
+      <span class="section-icon">⏱</span>
+      <div><div class="section-title">Vencimientos</div><div class="section-subtitle">Prioridad de consumo (FEFO)</div></div>
+    </div>
+    <p>Lista todos los lotes con vencimiento cargado, ordenados por fecha — lo que vence antes aparece primero. El color de cada aviso indica urgencia:</p>
+    <p><span class="badge badge-red">🔴 ≤ 3 días</span> &nbsp; <span class="badge badge-amber">🟡 ≤ 7 días</span> &nbsp; <span class="badge badge-green">🟢 más adelante</span></p>
+  </div>
+
+  <div class="section" id="precios">
+    <div class="section-header">
+      <span class="section-icon">💲</span>
+      <div><div class="section-title">Precios</div><div class="section-subtitle">Comparar por producto y proveedor</div></div>
+    </div>
+    <p>Cada lote guarda el precio pagado y el proveedor. Esta pestaña te deja comparar, por producto, cuánto pagaste en cada lugar y cuándo — usá el desplegable para filtrar por un producto puntual.</p>
+  </div>
+
+  <div class="section" id="movimientos">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <div><div class="section-title">Movimientos</div><div class="section-subtitle">Historial de ingresos y consumos</div></div>
+    </div>
+    <p>Cada ingreso (reposición) y cada consumo queda registrado acá, con fecha, producto y cantidad — más reciente primero. Filtrable por producto.</p>
+    <div class="note">El historial arranca desde que se agregó esta función (v0.15.0). Lo que se había cargado antes no aparece retroactivamente.</div>
+  </div>
+
+  <div class="section" id="consumo">
+    <div class="section-header">
+      <span class="section-icon">📊</span>
+      <div><div class="section-title">Consumo últimos 30 días</div><div class="section-subtitle">Cuánto se gasta de cada producto</div></div>
+    </div>
+    <p>Suma los consumos de los últimos 30 días exactos (no acumula meses anteriores), ordenados de mayor a menor, con un promedio semanal estimado — útil para calibrar el stock mínimo de cada producto.</p>
+  </div>
+
+  <div class="section" id="compra">
+    <div class="section-header">
+      <span class="section-icon">🛒</span>
+      <div><div class="section-title">Lista de compra</div><div class="section-subtitle">Se arma sola según los mínimos</div></div>
+    </div>
+    <p>Cualquier producto con stock por debajo de su mínimo configurado aparece acá automáticamente. El botón <strong>📤 Compartir</strong> usa el selector nativo del sistema — elegís vos si la mandás a Keep, WhatsApp, Notas o donde uses habitualmente.</p>
+  </div>
+
+  <div class="section" id="drive">
+    <div class="section-header">
+      <span class="section-icon">☁️</span>
+      <div><div class="section-title">Sincronización con Drive</div><div class="section-subtitle">Cómo viaja la información entre celular y PC</div></div>
+    </div>
+    <p>Se usa una carpeta propia <code>StockEnCasa/</code> en tu Drive, separada de tus otras apps, con dos archivos:</p>
+    <table>
+      <tr><th>Archivo</th><th>Contenido</th></tr>
+      <tr><td><code>escaneos_pendientes.json</code></td><td>Cola de escaneos del celular esperando ser completados en la PC</td></tr>
+      <tr><td><code>stock_backup.json</code></td><td>Respaldo completo (productos + lotes + cola) subido al salir</td></tr>
+    </table>
+    <p>El token de conexión se guarda por navegador (no es compartido entre dispositivos) — cada celular o perfil de navegador nuevo necesita conectar una vez.</p>
+  </div>
+
+  <div class="section" id="respaldo">
+    <div class="section-header">
+      <span class="section-icon">💾</span>
+      <div><div class="section-title">Respaldo y restauración</div><div class="section-subtitle">Tres capas de seguridad</div></div>
+    </div>
+    <div class="dashboard-grid">
+      <div class="dash-card" style="color:var(--primary);"><h4>Snapshot local</h4><div class="value">Automático</div><p style="font-size:12px; color:var(--muted); margin-top:4px;">Máx. 10, al salir o cambiar de pestaña</p></div>
+      <div class="dash-card" style="color:var(--blue);"><h4>Carpeta local</h4><div class="value">Manual (1 vez)</div><p style="font-size:12px; color:var(--muted); margin-top:4px;">Requiere Chrome/Edge en PC</p></div>
+      <div class="dash-card" style="color:var(--green);"><h4>Drive</h4><div class="value">Automático</div><p style="font-size:12px; color:var(--muted); margin-top:4px;">Si está conectado</p></div>
+    </div>
+    <h2>Vincular carpeta (PC)</h2>
+    <p>En <code>gestion.html</code> → <strong>📂 Vincular carpeta</strong>. Guarda <code>stock_backup_[fecha].json</code>, rotando un máximo de 7 archivos.</p>
+    <div class="warning">Brave bloquea esta función por sitio a través de "Edición de archivos" en <code>brave://settings/content/all</code>. Si el botón no hace nada, revisá ese permiso ahí y ponelo en "Preguntar", después recargá con Ctrl+Shift+R.</div>
+    <div class="info">Si tu navegador no soporta esta función (Brave sin el permiso habilitado, Firefox, Safari), el botón descarga un archivo suelto a la carpeta de Descargas en su lugar — sirve igual como respaldo manual.</div>
+    <h2>Restaurar un backup</h2>
+    <p>Botón <strong>⤴️ Restaurar backup</strong> → elegís cualquier archivo <code>stock_backup...json</code> (de carpeta, de Drive, o descargado a mano). Te muestra cuántos productos y lotes trae antes de confirmar — <strong>reemplaza todo</strong> lo que tenías cargado en ese navegador.</p>
+    <div class="tip">Sirve también para pasar los datos entre distintas instalaciones/perfiles de navegador: restaurás en el nuevo el backup que sacaste del viejo.</div>
+  </div>
+
+  <div class="section" id="changelog">
+    <div class="section-header">
+      <span class="section-icon">🧾</span>
+      <div><div class="section-title">Historial de cambios</div><div class="section-subtitle">De v0.1.0 a v0.17.1</div></div>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.17.0 – v0.17.1</span> <span class="changelog-tag tag-fix">fix</span></div>
+      <ul class="changelog-list">
+        <li>El contador de "pendientes" del celular ya no acumulaba para siempre — se corrigió para reflejar solo lo que falta subir a Drive</li>
+        <li>Reconexión automática de Drive al abrir el escáner, sin depender de tocar el botón cada vez</li>
+        <li>Fusión segura con lo que ya había en Drive antes de subir, para no pisar pendientes que la PC no bajó todavía</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.16.0 – v0.16.1</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Nueva pestaña "Consumo últimos 30 días" con promedio semanal por producto</li>
+        <li><code>navigator.storage.persist()</code> agregado para proteger los datos ante limpieza automática del navegador</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.15.0</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Nueva pestaña "Movimientos": historial de ingresos y consumos por producto</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.12.0 – v0.14.0</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Sistema de respaldo completo: snapshots locales, backup a Drive, backup en carpeta local (File System Access API)</li>
+        <li>Botón 🚪 Salir agregado también en gestión PC (antes solo estaba en el escáner)</li>
+        <li>Restaurar backup desde archivo, con vista previa de cantidad de productos/lotes antes de confirmar</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.10.0 – v0.11.1</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Nueva pestaña "Precios" para comparar por producto y proveedor</li>
+        <li>Productos ordenados alfabéticamente en toda la app</li>
+        <li>Filtro de Precios cambiado de chips a dropdown</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.6.0 – v0.9.0</span> <span class="changelog-tag tag-feature">feature</span></div>
+      <ul class="changelog-list">
+        <li>Integración con Google Drive: cola de escaneos sincronizada entre celular y PC</li>
+        <li>Autocompletado de proveedor con los ya usados</li>
+        <li>Precios con separador de miles y formato en vivo</li>
+      </ul>
+      <div class="changelog-version" style="margin-top:10px;"><span class="changelog-tag tag-fix">fix</span></div>
+      <ul class="changelog-list">
+        <li>Bug donde el mínimo en 0 se reemplazaba solo por 2 (operador <code>||</code> trata 0 como falso en JS)</li>
+        <li><code>proximosAVencer()</code> no aplicaba el filtro de días, mostrando de más en el Dashboard</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-version"><span class="v-num">v0.1.0 – v0.5.0</span> <span class="changelog-tag tag-infra">base</span></div>
+      <ul class="changelog-list">
+        <li>Estructura inicial: escáner con BarcodeDetector + fallback manual, gestión PC con Dashboard/Pendientes/Productos/Vencimientos</li>
+        <li>Consulta a Open Food Facts para sugerir nombre de producto al escanear</li>
+        <li>Edición y borrado de productos en línea</li>
+        <li>Íconos PWA y renombre a "Stock en Casa"</li>
+      </ul>
+    </div>
+
+  </div>
+
+</div>
+</div>
+</body>
+</html>
