@@ -68,7 +68,9 @@
 <div class="screen" id="s2">
   <div class="prod-hit">
     <div class="cod" id="s2cod"></div>
+    <img id="s2img" style="display:none; width:100%; max-height:160px; object-fit:contain; border-radius:10px; margin:8px 0;">
     <h3 id="s2nombre"></h3>
+    <div class="st" id="s2marca"></div>
     <div class="st" id="s2estado"></div>
   </div>
   <div style="font-size:12px; color:var(--sub); font-weight:600; margin-bottom:8px;">¿Qué hiciste con este producto?</div>
@@ -115,25 +117,55 @@ function volverAEscanear(){
   iniciarCamara();
 }
 
-function procesarCodigo(ean){
+let sugeridoActual = null; // datos externos (Open Food Facts) para el EAN actual, si los hay
+
+async function procesarCodigo(ean){
   if(!ean) return;
   detenerCamara();
   eanActual = ean;
-  const prod = StockDB.getProducto(ean);
+  sugeridoActual = null;
+
+  const img = document.getElementById('s2img');
+  img.style.display = 'none'; img.src = '';
   document.getElementById('s2cod').textContent = ean;
+  document.getElementById('s2marca').textContent = '';
+
+  const prod = StockDB.getProducto(ean);
   if(prod){
     document.getElementById('s2nombre').textContent = prod.nombre;
-    document.getElementById('s2estado').textContent = `Reconocido · ${prod.rubro}`;
-  } else {
-    document.getElementById('s2nombre').textContent = 'Producto no registrado';
-    document.getElementById('s2estado').textContent = 'Se dará de alta en la PC';
+    document.getElementById('s2estado').textContent = `Reconocido en tu stock · ${prod.rubro}`;
+    mostrar('s2');
+    return;
   }
+
+  // No está en tu base todavía: consultamos Open Food Facts (solo lectura, informativo)
+  document.getElementById('s2nombre').textContent = 'Buscando datos del producto…';
+  document.getElementById('s2estado').textContent = 'Producto no registrado en tu stock';
   mostrar('s2');
+
+  try{
+    const resp = await fetch(`https://world.openfoodfacts.org/api/v2/product/${ean}.json?fields=product_name,brands,image_front_small_url`);
+    const data = await resp.json();
+    if(data.status === 1 && data.product){
+      const p = data.product;
+      sugeridoActual = { nombre: p.product_name || '', marca: p.brands || '' };
+      document.getElementById('s2nombre').textContent = p.product_name || 'Producto sin nombre en la base';
+      document.getElementById('s2marca').textContent = p.brands ? `Marca: ${p.brands}` : '';
+      if(p.image_front_small_url){ img.src = p.image_front_small_url; img.style.display = 'block'; }
+      document.getElementById('s2estado').textContent = 'Datos de Open Food Facts · se dará de alta en la PC';
+    } else {
+      document.getElementById('s2nombre').textContent = 'Producto no registrado';
+      document.getElementById('s2estado').textContent = 'No encontrado en Open Food Facts · se dará de alta en la PC';
+    }
+  } catch(e){
+    document.getElementById('s2nombre').textContent = 'Producto no registrado';
+    document.getElementById('s2estado').textContent = 'Sin conexión a Open Food Facts · se dará de alta en la PC';
+  }
 }
 
 function registrar(tipo){
   const prod = StockDB.getProducto(eanActual);
-  StockDB.encolarEscaneo({ ean: eanActual, tipo, productoNuevo: !prod });
+  StockDB.encolarEscaneo({ ean: eanActual, tipo, productoNuevo: !prod, sugerido: sugeridoActual });
   document.getElementById('s3resumen').textContent =
     (tipo==='reponer' ? '➕ Reponer · ' : '➖ Consumir · ') + (prod ? prod.nombre : eanActual);
   actualizarBadge();
