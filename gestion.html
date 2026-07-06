@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock Control</span><span class="ver">v0.1.0</span></div>
+    <div class="brand"><span>📦 Stock Control</span><span class="ver" id="verLabel">v0.4.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -130,6 +130,10 @@
 
 <script src="stock-data.js"></script>
 <script>
+const APP_VERSION = '0.4.0';
+document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+
 function ir(id, btn){
   document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
