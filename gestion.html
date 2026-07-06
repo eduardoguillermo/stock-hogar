@@ -82,6 +82,8 @@
     <button id="btnSalirGestion" onclick="salirDeGestion()" style="margin:auto 18px 0; border:1.5px solid #dc2626; color:#f87171; border-radius:8px; padding:9px; text-align:center; justify-content:center;">🚪 Salir</button>
     <button onclick="stkSeleccionarCarpeta()" style="margin:8px 18px 0; border:1.5px solid var(--teal); color:#5eead4; border-radius:8px; padding:9px; text-align:center; justify-content:center;">📂 Vincular carpeta</button>
     <div id="stkCarpetaStatus" style="display:none; text-align:center; font-size:10.5px; color:#5eead4; margin-top:6px;"></div>
+    <button onclick="document.getElementById('inputRestaurar').click()" style="margin:8px 18px 0; border:1.5px solid #64748b; color:#94a3b8; border-radius:8px; padding:9px; text-align:center; justify-content:center;">⤴️ Restaurar backup</button>
+    <input type="file" id="inputRestaurar" accept="application/json" style="display:none;" onchange="stkRestaurarDesdeArchivo(event)">
     <div class="signature">Development by Guille</div>
   </div>
 
@@ -283,7 +285,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.13.1';
+const APP_VERSION = '0.14.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -312,6 +314,28 @@ window.addEventListener('beforeunload', () => { StockDB.guardarSnapshot(); });
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'hidden') respaldar();
 });
+
+function stkRestaurarDesdeArchivo(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      const cantProd = Object.keys(data.productos || {}).length;
+      const cantLotes = (data.lotes || []).length;
+      if(!confirm(`Este archivo tiene ${cantProd} producto(s) y ${cantLotes} lote(s).\n\nEsto va a REEMPLAZAR todos los datos actuales de esta app. ¿Confirmás?`)) return;
+      StockDB.importarTodo(data);
+      alert('✅ Backup restaurado correctamente.');
+      render();
+    }catch(e){
+      alert('❌ El archivo no es un backup válido de Stock en Casa.');
+      console.error(e);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // permite volver a elegir el mismo archivo si hace falta
+}
 
 function traerDeDrive(){
   DriveSync.init(async () => {
