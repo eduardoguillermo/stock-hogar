@@ -69,9 +69,9 @@ const StockDB = (() => {
 
   // ---------- Cola de escaneos (pendientes de completar en PC) ----------
   function listCola() { return _get(KEYS.cola, []).filter(c => !c.procesado); }
-  function encolarEscaneo({ ean, tipo, productoNuevo }) {
+  function encolarEscaneo({ ean, tipo, productoNuevo, sugerido }) {
     const cola = _get(KEYS.cola, []);
-    const item = { id: uid(), ean, tipo, productoNuevo: !!productoNuevo, timestamp: Date.now(), procesado: false };
+    const item = { id: uid(), ean, tipo, productoNuevo: !!productoNuevo, sugerido: sugerido || null, timestamp: Date.now(), procesado: false };
     cola.push(item);
     _set(KEYS.cola, cola);
     return item;
