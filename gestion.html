@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.11.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.11.1</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -123,7 +123,7 @@
     <div class="vista" id="v6" style="display:none;">
       <h2>Precios</h2>
       <div class="sub-h">Comparar precio por producto y proveedor (lotes más recientes primero)</div>
-      <div class="pc-tabs" id="filtroPrecioProducto"></div>
+      <select id="filtroPrecioProducto" style="max-width:280px; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:14px;" onchange="filtroPrecioEan = this.value || null; renderPrecios();"></select>
       <table id="tblPrecios"><thead><tr><th>Producto</th><th>Proveedor</th><th>Precio</th><th>Fecha</th></tr></thead><tbody></tbody></table>
     </div>
 
@@ -143,7 +143,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.11.0';
+const APP_VERSION = '0.11.1';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -196,9 +196,9 @@ let filtroPrecioEan = null;
 
 function renderPrecios(){
   const productos = StockDB.listProductos();
-  const chipsCont = document.getElementById('filtroPrecioProducto');
-  chipsCont.innerHTML = `<button class="${!filtroPrecioEan?'active':''}" onclick="filtroPrecioEan=null; renderPrecios();">Todos</button>` +
-    productos.map(p => `<button class="${filtroPrecioEan===p.ean?'active':''}" onclick="filtroPrecioEan='${p.ean}'; renderPrecios();">${p.nombre}</button>`).join('');
+  const selectEl = document.getElementById('filtroPrecioProducto');
+  selectEl.innerHTML = `<option value="">Todos los productos</option>` +
+    productos.map(p => `<option value="${p.ean}" ${filtroPrecioEan===p.ean?'selected':''}>${p.nombre}</option>`).join('');
 
   let lotes = StockDB.listLotes().filter(l => l.proveedor); // solo lotes con proveedor cargado
   if(filtroPrecioEan) lotes = lotes.filter(l => l.ean === filtroPrecioEan);
