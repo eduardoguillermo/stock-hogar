@@ -46,7 +46,7 @@
 </head>
 <body>
 
-<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.19.0</span></div>
+<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.20.0</span></div>
 
 <!-- PANTALLA 1: escaneo -->
 <div class="screen on" id="s1">
@@ -96,7 +96,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.19.0';
+const APP_VERSION = '0.20.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -187,8 +187,18 @@ function conectarDrive(){
   DriveSync.conectar();
 }
 
+function asegurarConexionDrive(timeoutMs = 8000){
+  return new Promise(resolve => {
+    if(DriveSync.conectado){ resolve(true); return; }
+    DriveSync.init(() => resolve(true));
+    DriveSync.conectar();
+    setTimeout(() => resolve(DriveSync.conectado), timeoutMs);
+  });
+}
+
 async function respaldar(){
   StockDB.guardarSnapshot();
+  await asegurarConexionDrive();
   if(DriveSync.conectado){
     try{ await DriveSync.subirBackup(StockDB.exportarTodo()); return true; }
     catch(e){ console.error('Error backup Drive', e); return false; }
