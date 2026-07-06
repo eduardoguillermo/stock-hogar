@@ -195,7 +195,7 @@ function renderPendientes(){
         <div class="pend-card">
           <div class="top"><b>Código ${item.ean}</b><span class="op add">REPONER · PRODUCTO NUEVO</span></div>
           <div class="pend-form">
-            <div><label>Nombre</label><input id="f_nombre_${item.id}"></div>
+            <div><label>Nombre${item.sugerido && item.sugerido.nombre ? ' <span style=\"color:var(--sub); font-weight:400;\">(sugerido: OFF)</span>' : ''}</label><input id="f_nombre_${item.id}" value="${item.sugerido && item.sugerido.nombre ? item.sugerido.nombre.replace(/"/g,'&quot;') : ''}"></div>
             <div><label>Rubro</label><select id="f_rubro_${item.id}"><option>Almacén</option><option>Limpieza</option><option>Lácteos</option></select></div>
             <div><label>Guarda</label><select id="f_guarda_${item.id}"><option>Alacena</option><option>Heladera</option><option>Freezer</option><option>Depósito</option></select></div>
             <div><label>Mínimo</label><input id="f_minimo_${item.id}" type="number" value="2"></div>
