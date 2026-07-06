@@ -96,8 +96,17 @@ const StockDB = (() => {
       .map(p => ({ ...p, stock: stockDe(p.ean) }));
   }
 
+  function eliminarProducto(ean) {
+    const productos = _get(KEYS.productos, {});
+    delete productos[ean];
+    _set(KEYS.productos, productos);
+    // se eliminan también sus lotes, para no dejar historial huérfano
+    const lotes = listLotes().filter(l => l.ean !== ean);
+    _set(KEYS.lotes, lotes);
+  }
+
   return {
-    getProducto, listProductos, upsertProducto,
+    getProducto, listProductos, upsertProducto, eliminarProducto,
     listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
     listCola, encolarEscaneo, marcarProcesado,
     proximosAVencer, bajoMinimo, uid, hoy
