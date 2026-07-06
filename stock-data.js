@@ -122,10 +122,16 @@ const StockDB = (() => {
     return agregados;
   }
 
+  function listProveedores() {
+    const set = new Set();
+    listLotes().forEach(l => { if (l.proveedor && l.proveedor.trim()) set.add(l.proveedor.trim()); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }
+
   return {
     getProducto, listProductos, upsertProducto, eliminarProducto,
     listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
     listCola, encolarEscaneo, marcarProcesado, mezclarColaRemota,
-    proximosAVencer, bajoMinimo, uid, hoy
+    proximosAVencer, bajoMinimo, listProveedores, uid, hoy
   };
 })();
