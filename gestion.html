@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.7.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.8.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -129,11 +129,13 @@
   </div>
 </div>
 
+<datalist id="listaProveedores"></datalist>
+
 <script src="stock-data.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.7.0';
+const APP_VERSION = '0.8.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -166,6 +168,12 @@ function render(){
   renderProductos();
   renderVencimientos();
   renderCompra();
+  renderProveedores();
+}
+
+function renderProveedores(){
+  document.getElementById('listaProveedores').innerHTML =
+    StockDB.listProveedores().map(p => `<option value="${p.replace(/"/g,'&quot;')}">`).join('');
 }
 
 function renderDashboard(){
@@ -217,7 +225,7 @@ function renderPendientes(){
             <div><label>Guarda</label><select id="f_guarda_${item.id}"><option>Alacena</option><option>Heladera</option><option>Freezer</option><option>Depósito</option></select></div>
             <div><label>Mínimo</label><input id="f_minimo_${item.id}" type="number" value="2"></div>
             <div><label>Cantidad</label><input id="f_cant_${item.id}" type="number" value="1"></div>
-            <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo"></div>
+            <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo" list="listaProveedores"></div>
             <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
             <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
             <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="altaYReponer('${item.id}','${item.ean}')">Guardar</button></div>
@@ -230,7 +238,7 @@ function renderPendientes(){
         <div class="top"><b>${nombre}</b><span class="op add">REPONER</span></div>
         <div class="pend-form">
           <div><label>Cantidad</label><input id="f_cant_${item.id}" type="number" value="1"></div>
-          <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo"></div>
+          <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo" list="listaProveedores"></div>
           <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
           <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
           <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="completarReposicion('${item.id}','${item.ean}')">Guardar</button></div>
