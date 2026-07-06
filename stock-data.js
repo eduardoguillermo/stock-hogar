@@ -23,7 +23,9 @@ const StockDB = (() => {
 
   // ---------- Productos ----------
   function getProducto(ean) { return _get(KEYS.productos, {})[ean] || null; }
-  function listProductos() { return Object.values(_get(KEYS.productos, {})); }
+  function listProductos() {
+    return Object.values(_get(KEYS.productos, {})).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  }
   function upsertProducto(p) {
     const all = _get(KEYS.productos, {});
     all[p.ean] = { minimo: 2, guarda: '', notas: '', ...all[p.ean], ...p };
