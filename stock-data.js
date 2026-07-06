@@ -103,6 +103,12 @@ const StockDB = (() => {
     // se eliminan también sus lotes, para no dejar historial huérfano
     const lotes = listLotes().filter(l => l.ean !== ean);
     _set(KEYS.lotes, lotes);
+    // se descartan pendientes en cola de tipo "consumir" para este ean (ya no hay nada que descontar);
+    // los de tipo "reponer" se conservan, van a re-ofrecerse como alta de producto nuevo
+    const cola = _get(KEYS.cola, []).map(c =>
+      (c.ean === ean && c.tipo === 'consumir' && !c.procesado) ? { ...c, procesado: true, descartadoPorBorrado: true } : c
+    );
+    _set(KEYS.cola, cola);
   }
 
   return {
