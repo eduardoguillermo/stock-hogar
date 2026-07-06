@@ -72,7 +72,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.8.1</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.9.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
@@ -116,7 +116,7 @@
     <div class="vista" id="v4" style="display:none;">
       <h2>Vencimientos</h2>
       <div class="sub-h">Orden de prioridad de consumo (FEFO)</div>
-      <table id="tblVenc"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Cant.</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="tblVenc"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Cant.</th><th>Precio</th><th></th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v5" style="display:none;">
@@ -135,7 +135,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.8.1';
+const APP_VERSION = '0.9.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -147,6 +147,18 @@ function traerDeDrive(){
     render();
   });
   DriveSync.conectar();
+}
+
+function limpiarNumero(str){
+  const n = Number((str || '').toString().replace(/[^\d]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+function formatearMiles(str){
+  const n = limpiarNumero(str);
+  return n ? n.toLocaleString('es-AR') : '';
+}
+function formatearPrecio(n){
+  return n ? '$' + Number(n).toLocaleString('es-AR') : '—';
 }
 
 function ir(id, btn){
@@ -226,7 +238,7 @@ function renderPendientes(){
             <div><label>Mínimo</label><input id="f_minimo_${item.id}" type="number" value="2"></div>
             <div><label>Cantidad</label><input id="f_cant_${item.id}" type="number" value="1"></div>
             <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo" list="listaProveedores"></div>
-            <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
+            <div><label>Precio unitario</label><input id="f_precio_${item.id}" inputmode="numeric" oninput="this.value=formatearMiles(this.value)" placeholder="0"></div>
             <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
             <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="altaYReponer('${item.id}','${item.ean}')">Guardar</button></div>
           </div>
@@ -239,7 +251,7 @@ function renderPendientes(){
         <div class="pend-form">
           <div><label>Cantidad</label><input id="f_cant_${item.id}" type="number" value="1"></div>
           <div><label>Proveedor</label><input id="f_prov_${item.id}" placeholder="Ej: Supermercado Átomo" list="listaProveedores"></div>
-          <div><label>Precio unitario</label><input id="f_precio_${item.id}"></div>
+          <div><label>Precio unitario</label><input id="f_precio_${item.id}" inputmode="numeric" oninput="this.value=formatearMiles(this.value)" placeholder="0"></div>
           <div><label>Vencimiento</label><input id="f_venc_${item.id}" type="date"></div>
           <div class="save-row"><button onclick="descartarPendiente('${item.id}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Descartar</button><button onclick="completarReposicion('${item.id}','${item.ean}')">Guardar</button></div>
         </div>
@@ -263,7 +275,7 @@ function descartarPendiente(id){
 
 function completarReposicion(id, ean){
   const g = k => document.getElementById(`f_${k}_${id}`).value;
-  StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: g('precio'), vencimiento: g('venc') || null });
+  StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: limpiarNumero(g('precio')), vencimiento: g('venc') || null });
   StockDB.marcarProcesado(id);
   render();
 }
@@ -273,7 +285,7 @@ function altaYReponer(id, ean){
   const nombre = g('nombre').trim();
   if(!nombre){ alert('Falta el nombre del producto — el código de barras no lo trae, hay que escribirlo.'); return; }
   StockDB.upsertProducto({ ean, nombre, rubro: g('rubro'), guarda: g('guarda'), minimo: (isNaN(Number(g('minimo')))?2:Number(g('minimo'))) });
-  StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: g('precio'), vencimiento: g('venc') || null });
+  StockDB.agregarLote({ ean, cantidad: g('cant'), proveedor: g('prov'), precio: limpiarNumero(g('precio')), vencimiento: g('venc') || null });
   StockDB.marcarProcesado(id);
   render();
 }
@@ -321,8 +333,8 @@ function renderVencimientos(){
   tbody.innerHTML = lotes.map(l=>{
     const prod = StockDB.getProducto(l.ean);
     const cls = l.dias <= 3 ? 'bad' : (l.dias <= 7 ? 'warn' : 'ok');
-    return `<tr><td>${prod?prod.nombre:l.ean}</td><td>${l.fechaIngreso}</td><td>${l.vencimiento}</td><td>${l.cantidadRestante}</td><td><span class="pill ${cls}">${l.dias} días</span></td></tr>`;
-  }).join('') || `<tr><td colspan="5" class="sub-h">No hay lotes con vencimiento cargado.</td></tr>`;
+    return `<tr><td>${prod?prod.nombre:l.ean}</td><td>${l.fechaIngreso}</td><td>${l.vencimiento}</td><td>${l.cantidadRestante}</td><td>${formatearPrecio(l.precio)}</td><td><span class="pill ${cls}">${l.dias} días</span></td></tr>`;
+  }).join('') || `<tr><td colspan="6" class="sub-h">No hay lotes con vencimiento cargado.</td></tr>`;
 }
 
 function renderCompra(){
