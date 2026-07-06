@@ -195,7 +195,7 @@ async function stkVerificarPermiso(handle){
 
 async function stkSeleccionarCarpeta(){
   if(!('showDirectoryPicker' in window)){
-    alert('Tu navegador no soporta la selección de carpeta local. Usá Chrome o Brave.');
+    stkDescargarBackupManual();
     return;
   }
   try{
@@ -207,6 +207,21 @@ async function stkSeleccionarCarpeta(){
   }catch(e){
     if(e.name !== 'AbortError') console.warn('stkSeleccionarCarpeta:', e);
   }
+}
+
+// Alternativa cuando el navegador no soporta vincular carpeta (ej. Brave): descarga un archivo suelto
+function stkDescargarBackupManual(){
+  const data = StockDB.exportarTodo();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'stock_backup_' + StockDB.hoy() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  alert('Tu navegador (Brave/Firefox/Safari) no permite vincular una carpeta automáticamente.\n\nSe descargó un archivo de respaldo a tu carpeta de Descargas. Para respaldo automático sin tocar nada, usá Chrome o Edge y volvé a tocar "Vincular carpeta".');
 }
 
 function stkActualizarEstadoCarpeta(nombre){
@@ -268,7 +283,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.13.0';
+const APP_VERSION = '0.13.1';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
