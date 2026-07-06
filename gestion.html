@@ -72,11 +72,12 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.9.0</span></div>
+    <div class="brand"><span>📦 Stock en Casa</span><span class="ver" id="verLabel">v0.10.0</span></div>
     <button class="active" data-v="v1" onclick="ir('v1', this)">⌂ Dashboard</button>
     <button data-v="v2" onclick="ir('v2', this)">🗂️ Pendientes <span class="badge" id="badgePend">0</span></button>
     <button data-v="v3" onclick="ir('v3', this)">☰ Productos</button>
     <button data-v="v4" onclick="ir('v4', this)">⏱ Vencimientos</button>
+    <button data-v="v6" onclick="ir('v6', this)">💲 Precios</button>
     <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
     <div class="signature">Development by Guille</div>
   </div>
@@ -119,6 +120,13 @@
       <table id="tblVenc"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Cant.</th><th>Precio</th><th></th></tr></thead><tbody></tbody></table>
     </div>
 
+    <div class="vista" id="v6" style="display:none;">
+      <h2>Precios</h2>
+      <div class="sub-h">Comparar precio por producto y proveedor (lotes más recientes primero)</div>
+      <div class="pc-tabs" id="filtroPrecioProducto"></div>
+      <table id="tblPrecios"><thead><tr><th>Producto</th><th>Proveedor</th><th>Precio</th><th>Fecha</th></tr></thead><tbody></tbody></table>
+    </div>
+
     <div class="vista" id="v5" style="display:none;">
       <h2>Lista de compra</h2>
       <div class="sub-h">Generada automáticamente según mínimos configurados</div>
@@ -135,7 +143,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.9.0';
+const APP_VERSION = '0.10.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -181,6 +189,32 @@ function render(){
   renderVencimientos();
   renderCompra();
   renderProveedores();
+  renderPrecios();
+}
+
+let filtroPrecioEan = null;
+
+function renderPrecios(){
+  const productos = StockDB.listProductos();
+  const chipsCont = document.getElementById('filtroPrecioProducto');
+  chipsCont.innerHTML = `<button class="${!filtroPrecioEan?'active':''}" onclick="filtroPrecioEan=null; renderPrecios();">Todos</button>` +
+    productos.map(p => `<button class="${filtroPrecioEan===p.ean?'active':''}" onclick="filtroPrecioEan='${p.ean}'; renderPrecios();">${p.nombre}</button>`).join('');
+
+  let lotes = StockDB.listLotes().filter(l => l.proveedor); // solo lotes con proveedor cargado
+  if(filtroPrecioEan) lotes = lotes.filter(l => l.ean === filtroPrecioEan);
+
+  lotes.sort((a,b)=>{
+    const pa = StockDB.getProducto(a.ean)?.nombre || a.ean;
+    const pb = StockDB.getProducto(b.ean)?.nombre || b.ean;
+    if(pa !== pb) return pa.localeCompare(pb);
+    return (b.fechaIngreso||'').localeCompare(a.fechaIngreso||'');
+  });
+
+  const tbody = document.querySelector('#tblPrecios tbody');
+  tbody.innerHTML = lotes.map(l=>{
+    const prod = StockDB.getProducto(l.ean);
+    return `<tr><td>${prod?prod.nombre:l.ean}</td><td>${l.proveedor}</td><td>${formatearPrecio(l.precio)}</td><td>${l.fechaIngreso}</td></tr>`;
+  }).join('') || `<tr><td colspan="4" class="sub-h">No hay precios cargados todavía.</td></tr>`;
 }
 
 function renderProveedores(){
