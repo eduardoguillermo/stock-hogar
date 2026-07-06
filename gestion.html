@@ -317,7 +317,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.20.1';
+const APP_VERSION = '0.21.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -490,7 +490,12 @@ function renderPrecios(){
   const tbody = document.querySelector('#tblPrecios tbody');
   tbody.innerHTML = lotes.map(l=>{
     const prod = StockDB.getProducto(l.ean);
-    return `<tr><td>${prod?prod.nombre:l.ean}</td><td>${l.proveedor}</td><td>${formatearPrecio(l.precio)}</td><td>${l.fechaIngreso}</td></tr>`;
+    return `<tr>
+      <td>${prod?prod.nombre:l.ean}</td>
+      <td><input class="notes-inline" value="${(l.proveedor||'').replace(/"/g,'&quot;')}" list="listaProveedores" onchange="StockDB.editarLote('${l.id}', {proveedor:this.value}); renderPrecios(); renderProveedores();"></td>
+      <td><input class="notes-inline" style="width:90px;" value="${l.precio ? Number(l.precio).toLocaleString('es-AR') : ''}" inputmode="numeric" oninput="this.value=formatearMiles(this.value)" onchange="StockDB.editarLote('${l.id}', {precio: limpiarNumero(this.value)}); renderPrecios();"></td>
+      <td>${l.fechaIngreso}</td>
+    </tr>`;
   }).join('') || `<tr><td colspan="4" class="sub-h">No hay precios cargados todavía.</td></tr>`;
 }
 
