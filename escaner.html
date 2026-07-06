@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Stock — Escáner</title>
+<link rel="manifest" href="manifest-escaner.json">
+<style>
+  :root{
+    --teal:#0d9488; --teal-dark:#0f766e; --teal-light:#ccfbf1;
+    --bg:#f1f5f9; --card:#ffffff; --border:#e2e8f0;
+    --ink:#1e293b; --sub:#64748b; --ok:#16a34a; --bad:#dc2626; --dev:#f59e0b; --sig:#93c5fd;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink);}
+  .topbar{background:var(--teal); color:#fff; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:5;}
+  .topbar .name{font-weight:700; font-size:15px;}
+  .topbar .ver{font-family:monospace; font-size:10px; opacity:.85;}
+  .screen{display:none; flex-direction:column; padding:16px; max-width:480px; margin:0 auto;}
+  .screen.on{display:flex;}
+
+  #reader{width:100%; aspect-ratio:1/1; background:#0b1120; border-radius:16px; overflow:hidden; position:relative;}
+  #reader video{width:100%; height:100%; object-fit:cover;}
+  .marco{position:absolute; left:17%; right:17%; top:34%; bottom:34%; border:3px solid var(--dev); border-radius:8px; pointer-events:none;}
+  .hint{text-align:center; color:var(--sub); font-size:12px; font-family:monospace; margin:10px 0 16px;}
+
+  .manual{display:flex; gap:8px; margin-bottom:14px;}
+  .manual input{flex:1; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-size:14px;}
+  .manual button{padding:12px 16px; border-radius:10px; border:none; background:var(--ink); color:#fff; font-weight:600;}
+
+  .prod-hit{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px;}
+  .prod-hit .cod{font-family:monospace; font-size:11px; color:var(--sub);}
+  .prod-hit h3{margin:4px 0 0; font-size:16px;}
+  .prod-hit .st{font-size:12px; color:var(--sub); margin-top:3px;}
+
+  .bigbtn{padding:20px; border-radius:16px; border:none; color:#fff; font-weight:700; font-size:15px; margin-bottom:10px; cursor:pointer; width:100%;}
+  .bigbtn.add{background:var(--ok);}
+  .bigbtn.rem{background:var(--bad);}
+  .ghostbtn{padding:13px; border-radius:12px; border:1.5px solid var(--border); background:transparent; color:var(--sub); font-weight:600; font-size:13px; cursor:pointer; width:100%;}
+
+  .queue-badge{display:flex; align-items:center; gap:8px; background:var(--teal-light); color:var(--teal-dark); padding:9px 12px; border-radius:12px; font-size:12.5px; font-weight:600; margin-top:14px;}
+  .sync-ok{margin-top:10px; font-size:11px; color:var(--sub); text-align:center;}
+  .salir{margin-top:16px; padding:12px; border-radius:12px; border:1.5px solid var(--bad); background:transparent; color:var(--bad); font-weight:700; font-size:13px; cursor:pointer; width:100%;}
+  .signature{text-align:center; font-family:'Dancing Script',cursive; color:var(--sig); font-size:14px; padding:16px 0 6px;}
+</style>
+</head>
+<body>
+
+<div class="topbar"><span class="name">📷 Stock — Captura</span><span class="ver" id="verLabel">v0.1.0</span></div>
+
+<!-- PANTALLA 1: escaneo -->
+<div class="screen on" id="s1">
+  <div id="reader"><div class="marco"></div></div>
+  <div class="hint" id="camHint">Apuntá al código de barras</div>
+
+  <div class="manual">
+    <input id="manualEan" type="text" inputmode="numeric" placeholder="O ingresá el código manualmente">
+    <button onclick="procesarCodigo(document.getElementById('manualEan').value.trim())">Ir</button>
+  </div>
+
+  <div class="queue-badge" id="queueBadge">🗂️ 0 escaneos pendientes de completar en PC</div>
+  <div class="sync-ok" id="syncStatus">☁️ Sincronización con Drive: pendiente de conectar</div>
+  <button class="salir" onclick="if(confirm('¿Salir de la app?'))window.close();">🚪 Salir</button>
+  <div class="signature">Development by Guille</div>
+</div>
+
+<!-- PANTALLA 2: reponer / consumir -->
+<div class="screen" id="s2">
+  <div class="prod-hit">
+    <div class="cod" id="s2cod"></div>
+    <h3 id="s2nombre"></h3>
+    <div class="st" id="s2estado"></div>
+  </div>
+  <div style="font-size:12px; color:var(--sub); font-weight:600; margin-bottom:8px;">¿Qué hiciste con este producto?</div>
+  <button class="bigbtn add" onclick="registrar('reponer')">➕ Reponer</button>
+  <button class="bigbtn rem" onclick="registrar('consumir')">➖ Consumir</button>
+  <button class="ghostbtn" onclick="volverAEscanear()">Cancelar</button>
+</div>
+
+<!-- PANTALLA 3: confirmación -->
+<div class="screen" id="s3">
+  <div class="prod-hit" style="border-color:var(--ok); border-width:1.5px;">
+    <div class="cod">✓ Guardado</div>
+    <h3 id="s3resumen"></h3>
+    <div class="st">Se completará el detalle en la PC</div>
+  </div>
+  <div class="queue-badge" id="queueBadge2">🗂️ 0 escaneos pendientes</div>
+  <button class="bigbtn add" style="background:var(--teal); margin-top:14px;" onclick="volverAEscanear()">Escanear otro</button>
+</div>
+
+<script src="stock-data.js"></script>
+<script>
+const APP_VERSION = '0.1.0';
+document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
+
+let eanActual = null;
+let barcodeDetector = null;
+let scanLoopActive = false;
+
+function actualizarBadge(){
+  const n = StockDB.listCola().length;
+  document.getElementById('queueBadge').textContent = `🗂️ ${n} escaneo${n===1?'':'s'} pendiente${n===1?'':'s'} de completar en PC`;
+  document.getElementById('queueBadge2').textContent = `🗂️ ${n} pendiente${n===1?'':'s'}`;
+}
+
+function mostrar(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+function volverAEscanear(){
+  eanActual = null;
+  document.getElementById('manualEan').value = '';
+  mostrar('s1');
+  iniciarCamara();
+}
+
+function procesarCodigo(ean){
+  if(!ean) return;
+  detenerCamara();
+  eanActual = ean;
+  const prod = StockDB.getProducto(ean);
+  document.getElementById('s2cod').textContent = ean;
+  if(prod){
+    document.getElementById('s2nombre').textContent = prod.nombre;
+    document.getElementById('s2estado').textContent = `Reconocido · ${prod.rubro}`;
+  } else {
+    document.getElementById('s2nombre').textContent = 'Producto no registrado';
+    document.getElementById('s2estado').textContent = 'Se dará de alta en la PC';
+  }
+  mostrar('s2');
+}
+
+function registrar(tipo){
+  const prod = StockDB.getProducto(eanActual);
+  StockDB.encolarEscaneo({ ean: eanActual, tipo, productoNuevo: !prod });
+  document.getElementById('s3resumen').textContent =
+    (tipo==='reponer' ? '➕ Reponer · ' : '➖ Consumir · ') + (prod ? prod.nombre : eanActual);
+  actualizarBadge();
+  mostrar('s3');
+}
+
+// ---- Cámara: BarcodeDetector nativo (Chrome/Android). Fallback: input manual. ----
+async function iniciarCamara(){
+  const hint = document.getElementById('camHint');
+  if(!('BarcodeDetector' in window)){
+    hint.textContent = 'Tu navegador no soporta lectura automática — usá el código manual abajo';
+    return;
+  }
+  try{
+    barcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','upc_a','upc_e','code_128'] });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const reader = document.getElementById('reader');
+    let video = reader.querySelector('video');
+    if(!video){ video = document.createElement('video'); video.autoplay = true; video.muted = true; video.playsInline = true; reader.prepend(video); }
+    video.srcObject = stream;
+    scanLoopActive = true;
+    loopEscaneo(video);
+  }catch(e){
+    console.error('Camara error', e);
+    hint.textContent = 'No se pudo abrir la cámara — usá el código manual abajo';
+  }
+}
+
+async function loopEscaneo(video){
+  if(!scanLoopActive) return;
+  try{
+    const codes = await barcodeDetector.detect(video);
+    if(codes.length){ procesarCodigo(codes[0].rawValue); return; }
+  }catch(e){ /* frame sin lectura, seguir intentando */ }
+  requestAnimationFrame(() => loopEscaneo(video));
+}
+
+function detenerCamara(){
+  scanLoopActive = false;
+  const video = document.querySelector('#reader video');
+  if(video && video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); }
+}
+
+actualizarBadge();
+iniciarCamara();
+</script>
+</body>
+</html>
