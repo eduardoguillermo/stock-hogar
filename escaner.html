@@ -46,7 +46,7 @@
 </head>
 <body>
 
-<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.17.0</span></div>
+<div class="topbar"><span class="name">📷 Stock en Casa — Captura</span><span class="ver" id="verLabel">v0.17.1</span></div>
 
 <!-- PANTALLA 1: escaneo -->
 <div class="screen on" id="s1">
@@ -95,7 +95,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.17.0';
+const APP_VERSION = '0.17.1';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -267,6 +267,14 @@ if(navigator.storage && navigator.storage.persist){ navigator.storage.persist();
 
 actualizarBadge();
 iniciarCamara();
+
+// Si ya había una conexión de Drive previa (token guardado vigente), la restablece
+// sola al abrir la app, sin esperar a que el usuario toque el botón.
+DriveSync.init(() => {
+  document.getElementById('syncStatus').textContent = '☁️ Drive: conectado';
+  document.getElementById('btnDrive').textContent = '☁️ Reconectar Drive';
+  subirColaADrive();
+});
 </script>
 </body>
 </html>
