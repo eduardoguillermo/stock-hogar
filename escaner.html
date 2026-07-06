@@ -92,8 +92,9 @@
 
 <script src="stock-data.js"></script>
 <script>
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.4.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
 let eanActual = null;
 let barcodeDetector = null;
