@@ -134,7 +134,7 @@
           <div style="display:flex; align-items:flex-end;"><button onclick="altaProducto()">Agregar producto</button></div>
         </div>
       </div>
-      <table id="tblProd"><thead><tr><th>Producto</th><th>Rubro</th><th>Guarda</th><th>Mínimo</th><th>Notas</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="tblProd"><thead><tr><th>Producto</th><th>Rubro</th><th>Guarda</th><th>Mínimo</th><th>Notas</th><th>Movimiento</th><th></th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v4" style="display:none;">
@@ -316,7 +316,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.18.2';
+const APP_VERSION = '0.19.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -609,15 +609,67 @@ function renderProductos(){
   const guardas = ['Alacena','Heladera','Freezer','Depósito'];
   const opt = (lista, actual) => lista.map(o => `<option ${o===actual?'selected':''}>${o}</option>`).join('');
 
-  tbody.innerHTML = StockDB.listProductos().map(p => `
+  tbody.innerHTML = StockDB.listProductos().map(p => {
+    const filaNormal = `
     <tr>
       <td><input class="notes-inline" value="${(p.nombre||'').replace(/"/g,'&quot;')}" onchange="StockDB.upsertProducto({ean:'${p.ean}', nombre:this.value}); render();"></td>
       <td><select class="notes-inline" onchange="StockDB.upsertProducto({ean:'${p.ean}', rubro:this.value}); render();">${opt(rubros, p.rubro)}</select></td>
       <td><select class="notes-inline" onchange="StockDB.upsertProducto({ean:'${p.ean}', guarda:this.value}); render();">${opt(guardas, p.guarda)}</select></td>
       <td><input class="notes-inline" type="number" style="width:60px;" value="${p.minimo}" onchange="StockDB.upsertProducto({ean:'${p.ean}', minimo:(isNaN(Number(this.value))?2:Number(this.value))}); render();"></td>
       <td><input class="notes-inline" value="${(p.notas||'').replace(/"/g,'&quot;')}" onchange="StockDB.upsertProducto({ean:'${p.ean}', notas:this.value})"></td>
+      <td style="white-space:nowrap;">
+        <button onclick="toggleFormManual('${p.ean}')" style="background:none; border:1.5px solid var(--ok); color:var(--ok); border-radius:6px; padding:3px 8px; cursor:pointer; font-weight:700; margin-right:4px;" title="Reponer manualmente">➕</button>
+        <button onclick="consumirManual('${p.ean}','${(p.nombre||'').replace(/'/g,"\\'")}')"style="background:none; border:1.5px solid var(--bad); color:var(--bad); border-radius:6px; padding:3px 8px; cursor:pointer; font-weight:700;" title="Consumir manualmente">➖</button>
+      </td>
       <td><button style="background:none; border:none; color:var(--bad); cursor:pointer; font-size:16px;" title="Borrar producto" onclick="borrarProducto('${p.ean}','${(p.nombre||'').replace(/'/g,"\\'")}')">🗑️</button></td>
-    </tr>`).join('') || `<tr><td colspan="6" class="sub-h">Sin productos aún.</td></tr>`;
+    </tr>`;
+
+    const filaForm = filaFormularioEan === p.ean ? `
+    <tr>
+      <td colspan="7" style="background:#f8fafc; padding:14px 16px;">
+        <div class="pend-form" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          <div><label>Cantidad</label><input id="man_cant_${p.ean}" type="number" value="1"></div>
+          <div><label>Proveedor</label><input id="man_prov_${p.ean}" placeholder="Ej: Supermercado Átomo" list="listaProveedores"></div>
+          <div><label>Precio unitario</label><input id="man_precio_${p.ean}" inputmode="numeric" oninput="this.value=formatearMiles(this.value)" placeholder="0"></div>
+          <div><label>Vencimiento</label><input id="man_venc_${p.ean}" type="date"></div>
+          <div class="save-row" style="grid-column:1/-1;">
+            <button onclick="toggleFormManual('${p.ean}')" style="background:none; border:1.5px solid var(--border); color:var(--sub); padding:8px 14px; border-radius:8px; font-weight:600; font-size:12.5px; cursor:pointer; margin-right:8px;">Cancelar</button>
+            <button onclick="reponerManual('${p.ean}')">Guardar reposición</button>
+          </div>
+        </div>
+      </td>
+    </tr>` : '';
+
+    return filaNormal + filaForm;
+  }).join('') || `<tr><td colspan="7" class="sub-h">Sin productos aún.</td></tr>`;
+}
+
+let filaFormularioEan = null;
+
+function toggleFormManual(ean){
+  filaFormularioEan = filaFormularioEan === ean ? null : ean;
+  renderProductos();
+  renderProveedores();
+}
+
+function reponerManual(ean){
+  const g = id => document.getElementById(id).value;
+  StockDB.agregarLote({
+    ean,
+    cantidad: g(`man_cant_${ean}`),
+    proveedor: g(`man_prov_${ean}`),
+    precio: limpiarNumero(g(`man_precio_${ean}`)),
+    vencimiento: g(`man_venc_${ean}`) || null
+  });
+  filaFormularioEan = null;
+  render();
+}
+
+function consumirManual(ean, nombre){
+  if(!confirm(`¿Registrar consumo de 1 unidad de "${nombre}"? Se descuenta el lote más próximo a vencer.`)) return;
+  const lote = StockDB.consumirUno(ean);
+  if(!lote) alert('No hay stock activo para descontar.');
+  render();
 }
 
 function borrarProducto(ean, nombre){
