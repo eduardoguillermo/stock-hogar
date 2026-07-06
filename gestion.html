@@ -79,6 +79,7 @@
     <button data-v="v4" onclick="ir('v4', this)">⏱ Vencimientos</button>
     <button data-v="v6" onclick="ir('v6', this)">💲 Precios</button>
     <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
+    <button id="btnSalirGestion" onclick="salirDeGestion()" style="margin:auto 18px 0; border:1.5px solid #dc2626; color:#f87171; border-radius:8px; padding:9px; text-align:center; justify-content:center;">🚪 Salir</button>
     <div class="signature">Development by Guille</div>
   </div>
 
@@ -143,9 +144,38 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.11.1';
+const APP_VERSION = '0.12.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+
+// ---------- Respaldo: snapshot local + backup a Drive ----------
+async function respaldar(silencioso = true){
+  StockDB.guardarSnapshot();
+  if(DriveSync.conectado){
+    try{
+      await DriveSync.subirBackup(StockDB.exportarTodo());
+      return { ok: true, drive: true };
+    }catch(e){
+      console.error('Error backup Drive', e);
+      return { ok: true, drive: false };
+    }
+  }
+  return { ok: true, drive: false };
+}
+
+function salirDeGestion(){
+  respaldar().then(res => {
+    const msg = res.drive
+      ? '✅ Respaldo local guardado y sincronizado con Drive.'
+      : '✅ Respaldo local guardado (Drive no conectado, no se subió).';
+    alert(msg);
+  });
+}
+
+window.addEventListener('beforeunload', () => { StockDB.guardarSnapshot(); });
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'hidden') respaldar();
+});
 
 function traerDeDrive(){
   DriveSync.init(async () => {
