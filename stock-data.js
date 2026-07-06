@@ -111,10 +111,21 @@ const StockDB = (() => {
     _set(KEYS.cola, cola);
   }
 
+  function mezclarColaRemota(itemsRemotos) {
+    const cola = _get(KEYS.cola, []);
+    const idsLocales = new Set(cola.map(c => c.id));
+    let agregados = 0;
+    (itemsRemotos || []).forEach(it => {
+      if (!idsLocales.has(it.id)) { cola.push(it); agregados++; }
+    });
+    if (agregados) _set(KEYS.cola, cola);
+    return agregados;
+  }
+
   return {
     getProducto, listProductos, upsertProducto, eliminarProducto,
     listLotes, lotesDe, lotesActivos, stockDe, agregarLote, consumirUno,
-    listCola, encolarEscaneo, marcarProcesado,
+    listCola, encolarEscaneo, marcarProcesado, mezclarColaRemota,
     proximosAVencer, bajoMinimo, uid, hoy
   };
 })();
