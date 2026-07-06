@@ -80,6 +80,8 @@
     <button data-v="v6" onclick="ir('v6', this)">💲 Precios</button>
     <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
     <button id="btnSalirGestion" onclick="salirDeGestion()" style="margin:auto 18px 0; border:1.5px solid #dc2626; color:#f87171; border-radius:8px; padding:9px; text-align:center; justify-content:center;">🚪 Salir</button>
+    <button onclick="stkSeleccionarCarpeta()" style="margin:8px 18px 0; border:1.5px solid var(--teal); color:#5eead4; border-radius:8px; padding:9px; text-align:center; justify-content:center;">📂 Vincular carpeta</button>
+    <div id="stkCarpetaStatus" style="display:none; text-align:center; font-size:10.5px; color:#5eead4; margin-top:6px;"></div>
     <div class="signature">Development by Guille</div>
   </div>
 
@@ -144,31 +146,150 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.12.0';
+// ---------- Backup en carpeta local (File System Access API) — mismo patrón que Control Financiero ----------
+const STK_FOLDER_DB    = 'stk-folder-db';
+const STK_FOLDER_STORE = 'handles';
+const STK_FOLDER_KEY   = 'carpeta';
+const STK_MAX_BK       = 7;
+let _stkFolderHandle = null;
+
+function stkAbrirFolderDB(){
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(STK_FOLDER_DB, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(STK_FOLDER_STORE);
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = e => rej(e.target.error);
+  });
+}
+async function stkGuardarHandle(handle){
+  try{
+    const db = await stkAbrirFolderDB();
+    const tx = db.transaction(STK_FOLDER_STORE, 'readwrite');
+    tx.objectStore(STK_FOLDER_STORE).put(handle, STK_FOLDER_KEY);
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    db.close();
+  }catch(e){ console.warn('stkGuardarHandle:', e); }
+}
+async function stkLeerHandle(){
+  try{
+    const db = await stkAbrirFolderDB();
+    const tx = db.transaction(STK_FOLDER_STORE, 'readonly');
+    const req = tx.objectStore(STK_FOLDER_STORE).get(STK_FOLDER_KEY);
+    const handle = await new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = rej; });
+    db.close();
+    return handle || null;
+  }catch(e){ return null; }
+}
+async function stkPermisoOtorgado(handle){
+  try{ return (await handle.queryPermission({ mode: 'readwrite' })) === 'granted'; }
+  catch(e){ return false; }
+}
+async function stkVerificarPermiso(handle){
+  try{
+    const opts = { mode: 'readwrite' };
+    if(await handle.queryPermission(opts) === 'granted') return true;
+    if(await handle.requestPermission(opts) === 'granted') return true;
+    return false;
+  }catch(e){ return false; }
+}
+
+async function stkSeleccionarCarpeta(){
+  if(!('showDirectoryPicker' in window)){
+    alert('Tu navegador no soporta la selección de carpeta local. Usá Chrome o Brave.');
+    return;
+  }
+  try{
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await stkGuardarHandle(handle);
+    _stkFolderHandle = handle;
+    stkActualizarEstadoCarpeta(handle.name);
+    await stkBackupEnCarpeta(handle);
+  }catch(e){
+    if(e.name !== 'AbortError') console.warn('stkSeleccionarCarpeta:', e);
+  }
+}
+
+function stkActualizarEstadoCarpeta(nombre){
+  const st = document.getElementById('stkCarpetaStatus');
+  if(st){ st.textContent = '📁 ' + nombre; st.style.display = 'block'; }
+}
+
+async function stkBackupEnCarpeta(handle){
+  if(!handle) return false;
+  const ok = await stkVerificarPermiso(handle);
+  if(!ok) return false;
+  try{
+    const fecha = StockDB.hoy();
+    const nombre = 'stock_backup_' + fecha + '.json';
+    const data = StockDB.exportarTodo();
+    const fileHandle = await handle.getFileHandle(nombre, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(data, null, 2));
+    await writable.close();
+    const entries = [];
+    for await (const entry of handle.values()){
+      if(entry.kind === 'file' && entry.name.startsWith('stock_backup_') && entry.name.endsWith('.json'))
+        entries.push(entry.name);
+    }
+    entries.sort().reverse();
+    for(const old of entries.slice(STK_MAX_BK)){ try{ await handle.removeEntry(old); }catch(e){} }
+    stkActualizarEstadoCarpeta(handle.name);
+    return true;
+  }catch(e){ console.warn('stkBackupEnCarpeta:', e); return false; }
+}
+
+async function stkRestaurarCarpeta(){
+  try{
+    const handle = await stkLeerHandle();
+    if(!handle) return;
+    const ok = await stkPermisoOtorgado(handle);
+    if(!ok){ stkMostrarBannerReauth(handle); return; }
+    _stkFolderHandle = handle;
+    stkActualizarEstadoCarpeta(handle.name);
+  }catch(e){ console.warn('stkRestaurarCarpeta:', e); }
+}
+
+function stkMostrarBannerReauth(handle){
+  if(document.getElementById('stk-reauth-carpeta')) return;
+  const b = document.createElement('div');
+  b.id = 'stk-reauth-carpeta';
+  b.style.cssText = 'position:fixed;bottom:16px;left:16px;background:#1e293b;color:#f1f5f9;padding:10px 14px;border-radius:8px;z-index:9998;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);font-size:12.5px;max-width:320px;';
+  b.innerHTML = '🔒 La carpeta local (' + handle.name + ') necesita que confirmes el acceso de nuevo.'
+    + '<button id="stk-reauth-btn" style="background:#0d9488;color:white;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Reautorizar</button>'
+    + '<span id="stk-reauth-x" style="cursor:pointer;color:#94a3b8;padding:0 2px;">✕</span>';
+  document.body.appendChild(b);
+  document.getElementById('stk-reauth-x').onclick = () => b.remove();
+  document.getElementById('stk-reauth-btn').onclick = async () => {
+    try{
+      const granted = await handle.requestPermission({ mode: 'readwrite' }) === 'granted';
+      if(granted){ _stkFolderHandle = handle; stkActualizarEstadoCarpeta(handle.name); b.remove(); }
+      else alert('No se otorgó el permiso. Podés vincular la carpeta de nuevo con el botón 📂 Carpeta.');
+    }catch(e){ alert('Error al reautorizar: ' + e.message); }
+  };
+}
+
+const APP_VERSION = '0.13.0';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+stkRestaurarCarpeta();
 
-// ---------- Respaldo: snapshot local + backup a Drive ----------
+// ---------- Respaldo: snapshot local + carpeta local + backup a Drive ----------
 async function respaldar(silencioso = true){
   StockDB.guardarSnapshot();
+  const okCarpeta = _stkFolderHandle ? await stkBackupEnCarpeta(_stkFolderHandle) : null;
+  let okDrive = false;
   if(DriveSync.conectado){
-    try{
-      await DriveSync.subirBackup(StockDB.exportarTodo());
-      return { ok: true, drive: true };
-    }catch(e){
-      console.error('Error backup Drive', e);
-      return { ok: true, drive: false };
-    }
+    try{ await DriveSync.subirBackup(StockDB.exportarTodo()); okDrive = true; }
+    catch(e){ console.error('Error backup Drive', e); }
   }
-  return { ok: true, drive: false };
+  return { carpeta: okCarpeta, drive: okDrive };
 }
 
 function salirDeGestion(){
   respaldar().then(res => {
-    const msg = res.drive
-      ? '✅ Respaldo local guardado y sincronizado con Drive.'
-      : '✅ Respaldo local guardado (Drive no conectado, no se subió).';
-    alert(msg);
+    const lineaCarpeta = res.carpeta === null ? '➖ Carpeta local: no vinculada' : (res.carpeta ? '✅ Carpeta local: guardado' : '❌ Carpeta local: error');
+    const lineaDrive = res.drive ? '✅ Drive: sincronizado' : '➖ Drive: no conectado';
+    alert(`Respaldo al salir:\n${lineaCarpeta}\n${lineaDrive}\n✅ Snapshot local: guardado`);
   });
 }
 
