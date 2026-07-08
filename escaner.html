@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Stock en Casa — Captura</title>
 <link rel="manifest" href="manifest-escaner.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap">
 <style>
   :root{
     --teal:#0d9488; --teal-dark:#0f766e; --teal-light:#ccfbf1;
@@ -96,7 +99,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.21.1';
+const APP_VERSION = '0.21.2';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -276,6 +279,7 @@ function detenerCamara(){
 
 if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
 
+mostrarSplash();
 actualizarBadge();
 iniciarCamara();
 

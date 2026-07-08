@@ -205,3 +205,67 @@ const StockDB = (() => {
     uid, hoy
   };
 })();
+
+// ── SPLASH — mismo patrón visual que el resto del ecosistema (Mini HA, etc.) ──
+// Requiere que el HTML que la llama defina `const APP_VERSION = '...'` antes.
+function mostrarSplash(){
+  const ahora = new Date();
+  const diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const dia = diasSemana[ahora.getDay()];
+  const fecha = `${dia} ${String(ahora.getDate()).padStart(2,'0')}/${meses[ahora.getMonth()]}/${ahora.getFullYear()}`;
+  const hora = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
+  const version = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '';
+
+  const el = document.createElement('div');
+  el.id = 'splash';
+  el.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;
+    background:#0f2027;
+    display:flex;flex-direction:column;
+    font-family:system-ui,sans-serif;
+  `;
+  el.innerHTML = `
+    <div style="background:#132a2e;border-bottom:1px solid rgba(255,255,255,0.08);padding:10px 18px;display:flex;align-items:center;gap:10px;">
+      <div style="width:32px;height:32px;background:#0d9488;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📦</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:#e0e0e0;">Stock en Casa</div>
+        <div style="font-size:10px;color:#5eead4;">Inventario del hogar</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 2rem;">
+      <div style="margin-bottom:2.5rem;text-align:center;">
+        <div style="font-size:26px;font-weight:500;letter-spacing:0.03em;color:#ccfbf1;line-height:1.4;">Control de stock, lotes y vencimientos</div>
+      </div>
+      <div style="width:100%;max-width:400px;margin-bottom:1rem;">
+        <div style="position:relative;height:1px;background:#1e3a3a;">
+          <div id="splash-bar" style="position:absolute;top:0;left:0;height:100%;width:0%;background:#0d9488;transition:width 5s linear;"></div>
+        </div>
+      </div>
+      <div style="text-align:center;width:100%;max-width:400px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:1rem;font-size:10px;color:#5a8a85;font-family:monospace;letter-spacing:0.05em;">
+          <span style="color:#5eead4;">Stock en Casa</span>
+          <span style="opacity:0.3;">·</span>
+          <span>${fecha}</span>
+          <span style="opacity:0.3;">·</span>
+          <span>${hora}</span>
+          <span style="opacity:0.3;">·</span>
+          <span>${version}</span>
+        </div>
+        <div style="margin-top:16px;font-family:'Dancing Script',cursive;font-size:22px;color:#93c5fd;">Development by Guille</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+
+  setTimeout(() => {
+    const bar = document.getElementById('splash-bar');
+    if(bar) bar.style.width = '100%';
+  }, 50);
+
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.4s ease';
+    el.style.opacity = '0';
+    setTimeout(() => { el.remove(); }, 400);
+  }, 5000);
+}

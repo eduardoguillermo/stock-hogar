@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stock en Casa — Gestión</title>
 <link rel="manifest" href="manifest-gestion.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap">
 <style>
   :root{
     --teal:#0d9488; --teal-dark:#0f766e; --teal-light:#ccfbf1;
@@ -317,7 +320,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.21.1';
+const APP_VERSION = '0.21.2';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -739,6 +742,7 @@ async function copiarListaCompra(){
 
 if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
 
+mostrarSplash();
 render();
 </script>
 </body>
