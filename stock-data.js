@@ -238,11 +238,6 @@ function mostrarSplash(){
         <div style="font-size:32px;font-weight:700;letter-spacing:0.02em;color:#ccfbf1;line-height:1.3;">Stock en Casa</div>
         <div style="margin-top:10px;font-size:14px;font-weight:400;letter-spacing:0.02em;color:#5a8a85;">Control de stock, lotes y vencimientos</div>
       </div>
-      <div style="width:100%;max-width:400px;margin-bottom:1rem;">
-        <div style="position:relative;height:1px;background:#1e3a3a;">
-          <div id="splash-bar" style="position:absolute;top:0;left:0;height:100%;width:0%;background:#0d9488;transition:width 5s linear;"></div>
-        </div>
-      </div>
       <div style="text-align:center;width:100%;max-width:400px;">
         <div style="display:flex;align-items:center;justify-content:center;gap:1rem;font-size:10px;color:#5a8a85;font-family:monospace;letter-spacing:0.05em;">
           <span style="color:#5eead4;">Stock en Casa</span>
@@ -254,19 +249,26 @@ function mostrarSplash(){
           <span>${version}</span>
         </div>
         <div style="margin-top:16px;font-family:'Dancing Script',cursive;font-size:22px;color:#93c5fd;">Development by Guille</div>
+        <div style="margin-top:32px;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0.85;animation:splash-pulse 1.8s ease-in-out infinite;">
+          <span style="border:1.2px solid #2a4a4a;border-radius:5px;padding:3px 9px;font-size:10.5px;color:#cbd5e1;font-weight:600;">ENTER</span>
+          <span style="font-size:11.5px;color:#5a8a85;">o tocá la pantalla para continuar</span>
+        </div>
       </div>
     </div>
+    <style>@keyframes splash-pulse { 0%,100%{opacity:0.45;} 50%{opacity:1;} }</style>
   `;
   document.body.appendChild(el);
 
-  setTimeout(() => {
-    const bar = document.getElementById('splash-bar');
-    if(bar) bar.style.width = '100%';
-  }, 50);
-
-  setTimeout(() => {
-    el.style.transition = 'opacity 0.4s ease';
+  function cerrarSplash(){
+    document.removeEventListener('keydown', onKeydown);
+    el.removeEventListener('click', cerrarSplash);
+    el.style.transition = 'opacity 0.3s ease';
     el.style.opacity = '0';
-    setTimeout(() => { el.remove(); }, 400);
-  }, 5000);
+    setTimeout(() => { el.remove(); }, 300);
+  }
+  function onKeydown(e){
+    if(e.key === 'Enter') cerrarSplash();
+  }
+  document.addEventListener('keydown', onKeydown);
+  el.addEventListener('click', cerrarSplash);
 }
