@@ -235,7 +235,8 @@ function mostrarSplash(){
     </div>
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 2rem;">
       <div style="margin-bottom:2.5rem;text-align:center;">
-        <div style="font-size:26px;font-weight:500;letter-spacing:0.03em;color:#ccfbf1;line-height:1.4;">Control de stock, lotes y vencimientos</div>
+        <div style="font-size:32px;font-weight:700;letter-spacing:0.02em;color:#ccfbf1;line-height:1.3;">Stock en Casa</div>
+        <div style="margin-top:10px;font-size:14px;font-weight:400;letter-spacing:0.02em;color:#5a8a85;">Control de stock, lotes y vencimientos</div>
       </div>
       <div style="width:100%;max-width:400px;margin-bottom:1rem;">
         <div style="position:relative;height:1px;background:#1e3a3a;">
