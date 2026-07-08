@@ -17,7 +17,7 @@
   *{box-sizing:border-box;}
   body{margin:0; font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink);}
   .app{display:flex; min-height:100vh;}
-  .sidebar{width:220px; background:#0f2027; color:#cbd5e1; display:flex; flex-direction:column; padding:18px 0; flex-shrink:0;}
+  .sidebar{width:220px; background:#0f2027; color:#cbd5e1; display:flex; flex-direction:column; padding:18px 0; flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto;}
   .sidebar .brand{padding:0 18px 14px; font-weight:700; color:#fff; font-size:16px; border-bottom:1px solid #1e3a3a; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;}
   .sidebar .brand .ver{font-family:monospace; font-size:10px; color:#5eead4;}
   .sidebar button{background:none; border:none; color:#93a3ad; text-align:left; padding:11px 18px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;}
@@ -90,11 +90,11 @@
     <button data-v="v7" onclick="ir('v7', this)">📋 Movimientos</button>
     <button data-v="v8" onclick="ir('v8', this)">📊 Consumo 30 días</button>
     <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
-    <button onclick="window.open('instructivo.html','_blank')">📖 Ayuda</button>
+    <button onclick="window.open('instructivo.html','_blank')" style="margin-bottom:10px;">📖 Ayuda</button>
 
     <div style="flex:1;"></div>
 
-    <div style="margin:0 18px 10px; position:relative;">
+    <div style="margin:0 18px 10px; padding-top:12px; border-top:1px solid #1e3a3a; position:relative;">
       <button onclick="stkToggleMenuBackup()" style="width:100%; border:1.5px solid var(--teal); color:#5eead4; border-radius:8px; padding:9px; text-align:center; justify-content:center; background:none;">💾 BK</button>
       <div id="stkMenuBackup" style="display:none; margin-top:6px; background:#0b1a1a; border:1px solid #1e3a3a; border-radius:8px; overflow:hidden;">
         <button onclick="stkToggleMenuBackup(); stkSeleccionarCarpeta();" style="width:100%; border:none; color:#5eead4; padding:10px 10px 4px; text-align:left; justify-content:flex-start; background:none;">📂 Vincular carpeta</button>
@@ -320,7 +320,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.21.4';
+const APP_VERSION = '0.21.5';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
