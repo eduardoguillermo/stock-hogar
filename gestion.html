@@ -90,7 +90,7 @@
     <button data-v="v7" onclick="ir('v7', this)">📋 Movimientos</button>
     <button data-v="v8" onclick="ir('v8', this)">📊 Consumo 30 días</button>
     <button data-v="v5" onclick="ir('v5', this)">🛒 Lista de compra</button>
-    <button onclick="window.open('instructivo.html','_blank')" style="margin-bottom:10px;">📖 Ayuda</button>
+    <button onclick="location.href='instructivo.html'" style="margin-bottom:10px;">📖 Ayuda</button>
 
     <div style="flex:1;"></div>
 
@@ -111,21 +111,21 @@
   <div class="main">
 
     <div class="vista" id="v1">
-      <div class="h2-row"><h2>Dashboard</h2><a class="help-dot" href="instructivo.html#inicio" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Dashboard</h2><a class="help-dot" href="instructivo.html#inicio" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Resumen general de stock</div>
       <div class="kpis" id="kpis"></div>
       <table id="tblDash"><thead><tr><th>Producto</th><th>Rubro</th><th>Stock</th><th>Estado</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v2" style="display:none;">
-      <div class="h2-row"><h2>Pendientes de completar</h2><a class="help-dot" href="instructivo.html#pendientes" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Pendientes de completar</h2><a class="help-dot" href="instructivo.html#pendientes" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Escaneos hechos desde el celular, esperando datos</div>
       <button class="save-row" style="background:var(--teal); color:#fff; border:none; padding:9px 16px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer; margin-bottom:14px;" onclick="traerDeDrive()">☁️ Traer pendientes desde Drive</button>
       <div id="pendList"></div>
     </div>
 
     <div class="vista" id="v3" style="display:none;">
-      <div class="h2-row"><h2>Productos</h2><a class="help-dot" href="instructivo.html#productos" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Productos</h2><a class="help-dot" href="instructivo.html#productos" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Alta manual y edición</div>
       <div class="form-card">
         <div class="form-grid">
@@ -141,33 +141,33 @@
     </div>
 
     <div class="vista" id="v4" style="display:none;">
-      <div class="h2-row"><h2>Vencimientos</h2><a class="help-dot" href="instructivo.html#vencimientos" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Vencimientos</h2><a class="help-dot" href="instructivo.html#vencimientos" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Orden de prioridad de consumo (FEFO)</div>
       <table id="tblVenc"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Cant.</th><th>Precio</th><th></th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v6" style="display:none;">
-      <div class="h2-row"><h2>Precios</h2><a class="help-dot" href="instructivo.html#precios" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Precios</h2><a class="help-dot" href="instructivo.html#precios" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Comparar precio por producto y proveedor (lotes más recientes primero)</div>
       <select id="filtroPrecioProducto" style="max-width:280px; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:14px;" onchange="filtroPrecioEan = this.value || null; renderPrecios();"></select>
       <table id="tblPrecios"><thead><tr><th>Producto</th><th>Proveedor</th><th>Precio</th><th>Fecha</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v7" style="display:none;">
-      <div class="h2-row"><h2>Movimientos</h2><a class="help-dot" href="instructivo.html#movimientos" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Movimientos</h2><a class="help-dot" href="instructivo.html#movimientos" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Historial de ingresos y consumos, más reciente primero</div>
       <select id="filtroMovProducto" style="max-width:280px; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:14px;" onchange="filtroMovEan = this.value || null; renderMovimientos();"></select>
       <table id="tblMovimientos"><thead><tr><th>Fecha</th><th>Producto</th><th>Movimiento</th><th>Cantidad</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v8" style="display:none;">
-      <div class="h2-row"><h2>Consumo últimos 30 días</h2><a class="help-dot" href="instructivo.html#consumo" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Consumo últimos 30 días</h2><a class="help-dot" href="instructivo.html#consumo" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Cuánto consumiste de cada producto en el último mes, de mayor a menor</div>
       <table id="tblConsumo30"><thead><tr><th>Producto</th><th>Rubro</th><th>Cantidad consumida</th><th>Promedio / semana</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="vista" id="v5" style="display:none;">
-      <div class="h2-row"><h2>Lista de compra</h2><a class="help-dot" href="instructivo.html#compra" target="_blank" title="Ayuda sobre esta pantalla">?</a></div>
+      <div class="h2-row"><h2>Lista de compra</h2><a class="help-dot" href="instructivo.html#compra" title="Ayuda sobre esta pantalla">?</a></div>
       <div class="sub-h">Generada automáticamente según mínimos configurados</div>
       <div class="compra-list"><div id="compraItems"></div></div>
       <button class="share-btn" onclick="compartirLista()">📤 Compartir</button>
@@ -320,7 +320,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.21.5';
+const APP_VERSION = '0.21.6';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();

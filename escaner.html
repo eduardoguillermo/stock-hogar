@@ -65,7 +65,7 @@
   <div class="sync-ok" id="syncStatus">☁️ Drive: no conectado</div>
   <button class="ghostbtn" id="btnDrive" style="margin-top:8px;" onclick="conectarDrive()">☁️ Conectar con Drive</button>
   <button class="salir" onclick="salirDelEscaner()">🚪 Salir</button>
-  <a href="instructivo.html" target="_blank" style="display:block; text-align:center; color:var(--sub); font-size:12px; text-decoration:none; margin-top:8px;">📖 Instructivo</a>
+  <a href="instructivo.html" style="display:block; text-align:center; color:var(--sub); font-size:12px; text-decoration:none; margin-top:8px;">📖 Instructivo</a>
   <div class="signature">Development by Guille</div>
 </div>
 
@@ -99,7 +99,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.21.5';
+const APP_VERSION = '0.21.6';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
