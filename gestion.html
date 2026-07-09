@@ -320,7 +320,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.21.9';
+const APP_VERSION = '0.21.10';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -744,6 +744,11 @@ if(navigator.storage && navigator.storage.persist){ navigator.storage.persist();
 
 mostrarSplash();
 render();
+
+// Reconecta Drive al abrir (silencioso, sin popup) para que al tocar Salir
+// el backup sea instantáneo y no se pierda el permiso del navegador para cerrar.
+DriveSync.init(() => {});
+DriveSync.conectar();
 </script>
 <div id="modalAyuda" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(15,32,39,.55);">
   <div style="position:absolute; inset:16px; background:#fff; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,.3);">

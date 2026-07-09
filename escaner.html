@@ -99,7 +99,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="drive-sync.js"></script>
 <script>
-const APP_VERSION = '0.21.9';
+const APP_VERSION = '0.21.10';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 
@@ -202,11 +202,12 @@ function asegurarConexionDrive(timeoutMs = 8000){
 async function respaldar(){
   StockDB.guardarSnapshot();
   await asegurarConexionDrive();
+  let okDrive = false;
   if(DriveSync.conectado){
-    try{ await DriveSync.subirBackup(StockDB.exportarTodo()); return true; }
-    catch(e){ console.error('Error backup Drive', e); return false; }
+    try{ await DriveSync.subirBackup(StockDB.exportarTodo()); okDrive = true; }
+    catch(e){ console.error('Error backup Drive', e); }
   }
-  return false;
+  return okDrive;
 }
 
 function salirDelEscaner(){
@@ -290,6 +291,8 @@ DriveSync.init(() => {
   document.getElementById('btnDrive').textContent = '☁️ Reconectar Drive';
   subirColaADrive();
 });
+// Si el token guardado venció, intenta renovarlo en silencio (sin popup) igual.
+DriveSync.conectar();
 </script>
 <div id="modalAyuda" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(15,32,39,.55);">
   <div style="position:absolute; inset:10px; background:#fff; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,.3);">
