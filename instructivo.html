@@ -122,7 +122,9 @@
 </head>
 <body>
 
-<button onclick="if(document.referrer){ location.href = document.referrer; } else { history.back(); }" style="position:fixed; top:14px; left:14px; z-index:50; background:#0d9488; color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.15);">← Volver</button>
+<div style="position:sticky; top:0; left:0; right:0; z-index:9999; background:#0d9488; padding:10px 14px; display:flex; align-items:center; box-shadow:0 2px 6px rgba(0,0,0,.15);">
+  <button onclick="if(document.referrer){ location.href = document.referrer; } else { history.back(); }" style="background:#0f766e; color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:13px; cursor:pointer;">← Volver</button>
+</div>
 
 <div class="layout">
 
