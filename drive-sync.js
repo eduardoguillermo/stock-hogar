@@ -1,4 +1,4 @@
-/* drive-sync.js — v0.2.0
+/* drive-sync.js — v0.3.0
    Sincroniza contra archivos en Drive, en una carpeta propia "StockEnCasa"
    para no mezclarse con otras apps. Maneja dos archivos:
    - escaneos_pendientes.json (cola de escaneos del celular)
@@ -17,9 +17,18 @@ const DriveSync = (() => {
   let folderId = null;
   const fileIds = {}; // cache de fileId por nombre de archivo
   let renewTimer = null;
+  let _solicitando = false; // evita solicitudes de token superpuestas (init + conectar a la vez)
   const TOKEN_KEY = 'stk_drive_token';
 
   function log(...args) { console.log('[DriveSync]', ...args); }
+
+  // Toda solicitud de token pasa por acá: si ya hay una en curso, no duplica
+  function pedirToken(prompt) {
+    if (_solicitando || !tokenClient) return;
+    _solicitando = true;
+    try { tokenClient.requestAccessToken({ prompt }); }
+    catch (e) { _solicitando = false; log('requestAccessToken lanzó:', e); }
+  }
 
   function guardarToken(token, expiresInSeg) {
     const vencimiento = Date.now() + (expiresInSeg * 1000) - 60000; // 1 min de margen
@@ -46,12 +55,14 @@ const DriveSync = (() => {
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (resp) => {
+          _solicitando = false;
           if (resp.error) { log('Error de token', resp); return; }
           accessToken = resp.access_token;
           guardarToken(accessToken, resp.expires_in || 3600);
           programarRenovacion();
           if (onReady) onReady();
-        }
+        },
+        error_callback: (err) => { _solicitando = false; log('Intento de token falló (silencioso):', err && err.type); }
       });
     }
     // Si ya hay un token vigente guardado, lo reusamos sin pedir nada
@@ -60,19 +71,26 @@ const DriveSync = (() => {
       accessToken = guardado;
       programarRenovacion();
       if (onReady) onReady();
+    } else if (localStorage.getItem(TOKEN_KEY)) {
+      // Hubo token antes pero venció: renovación silenciosa recién ahora, que
+      // tokenClient ya existe. Antes el conectar() suelto corría con tokenClient
+      // en null (GIS carga async) y la renovación podía no ocurrir nunca.
+      // Si nunca hubo token, no se intenta nada: se conecta manualmente.
+      pedirToken('');
     }
   }
 
   function conectar() {
     if (accessToken) return; // ya conectado (sesión en memoria o token guardado vigente)
     if (!tokenClient) { log('tokenClient no inicializado todavía'); return; }
-    tokenClient.requestAccessToken({ prompt: '' }); // intento silencioso primero
+    pedirToken(''); // intento silencioso; si init ya pidió, no duplica
   }
 
   function forzarReconexion() {
     accessToken = null;
     localStorage.removeItem(TOKEN_KEY);
-    if (tokenClient) tokenClient.requestAccessToken({ prompt: 'consent' });
+    _solicitando = false; // acción manual del usuario: pisa cualquier intento colgado
+    pedirToken('consent');
   }
 
   // Renovación silenciosa: se programa según el vencimiento real del token (o 50 min por defecto)
@@ -87,7 +105,7 @@ const DriveSync = (() => {
       }
     } catch (e) { /* usar delay por defecto */ }
     renewTimer = setTimeout(() => {
-      tokenClient.requestAccessToken({ prompt: '' });
+      pedirToken('');
     }, delay);
   }
 
