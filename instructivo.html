@@ -122,22 +122,6 @@
 </head>
 <body>
 
-<div style="position:sticky; top:0; left:0; right:0; z-index:9999; background:#0d9488; padding:6px 10px; display:flex; align-items:center; box-shadow:0 2px 6px rgba(0,0,0,.15);">
-  <button id="btnVolverInstructivo" style="background:#0f766e; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer;">← Volver</button>
-</div>
-<script>
-(function(){
-  const btn = document.getElementById('btnVolverInstructivo');
-  const enIframe = window.self !== window.top;
-  if(enIframe){
-    btn.textContent = '✕ Cerrar';
-    btn.onclick = () => { if(parent && parent.cerrarAyuda) parent.cerrarAyuda(); };
-  } else {
-    btn.onclick = () => { if(document.referrer){ location.href = document.referrer; } else { history.back(); } };
-  }
-})();
-</script>
-
 <div class="layout">
 
 <nav class="sidebar">
