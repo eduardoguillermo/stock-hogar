@@ -1,5 +1,5 @@
-// sw.js — v0.21.11
-const CACHE_NAME = 'stock-hogar-v0.21.11';
+// sw.js — v0.21.12
+const CACHE_NAME = 'stock-hogar-v0.21.12';
 const ARCHIVOS = [
   './escaner.html',
   './gestion.html',
