@@ -320,7 +320,7 @@ function stkMostrarBannerReauth(handle){
   };
 }
 
-const APP_VERSION = '0.21.11';
+const APP_VERSION = '0.21.12';
 document.getElementById('verLabel').textContent = 'v' + APP_VERSION;
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 stkRestaurarCarpeta();
@@ -708,15 +708,36 @@ function renderVencimientos(){
   }).join('') || `<tr><td colspan="6" class="sub-h">No hay lotes con vencimiento cargado.</td></tr>`;
 }
 
+function _getCompraDesmarcados(){
+  try { return new Set(JSON.parse(localStorage.getItem('stk_compraDesmarcados') || '[]')); }
+  catch(e){ return new Set(); }
+}
+function _setCompraDesmarcados(set){
+  try { localStorage.setItem('stk_compraDesmarcados', JSON.stringify([...set])); } catch(e){}
+}
+let compraDesmarcados = _getCompraDesmarcados();
+
 function renderCompra(){
   const bajos = StockDB.bajoMinimo();
   document.getElementById('compraItems').innerHTML = bajos.map(p=>
-    `<div class="compra-item"><span>${p.nombre}</span><span>${p.stock} → completar a ${p.minimo}</span></div>`
+    `<div class="compra-item">
+       <label style="display:flex; align-items:center; gap:8px; flex:1; cursor:pointer;">
+         <input type="checkbox" ${compraDesmarcados.has(p.ean)?'':'checked'} onchange="toggleCompraItem('${p.ean}', this.checked)">
+         <span>${p.nombre}</span>
+       </label>
+       <span>${p.stock} → completar a ${p.minimo}</span>
+     </div>`
   ).join('') || `<div class="empty">Sin faltantes por ahora 🎉</div>`;
 }
 
+function toggleCompraItem(ean, checked){
+  if(checked) compraDesmarcados.delete(ean);
+  else compraDesmarcados.add(ean);
+  _setCompraDesmarcados(compraDesmarcados);
+}
+
 function textoListaCompra(){
-  const bajos = StockDB.bajoMinimo();
+  const bajos = StockDB.bajoMinimo().filter(p => !compraDesmarcados.has(p.ean));
   if(!bajos.length) return null;
   return 'Lista de compra:\n' + bajos.map(p=>`• ${p.nombre} (tengo ${p.stock}, necesito ${p.minimo})`).join('\n');
 }
